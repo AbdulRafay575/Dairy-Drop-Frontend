@@ -1,0 +1,58 @@
+Structure
+dairy-drop-frontend/
+├── src/
+│   ├── components/
+│   │   ├── ui/ (existing ShadCN components)
+│   │   ├── layout/
+│   │   │   ├── Header.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── Navbar.jsx
+│   │   │   └── AppLayout.jsx
+│   │   ├── products/
+│   │   │   ├── ProductCard.jsx
+│   │   │   ├── ProductGrid.jsx
+│   │   │   ├── ProductFilters.jsx
+│   │   │   └── ProductDetail.jsx
+│   │   ├── cart/
+│   │   │   ├── CartItem.jsx
+│   │   │   ├── CartSummary.jsx
+│   │   │   └── CheckoutForm.jsx
+│   │   ├── auth/
+│   │   │   ├── LoginForm.jsx
+│   │   │   └── RegisterForm.jsx
+│   │   └── shared/
+│   │       ├── LoadingSpinner.jsx
+│   │       ├── ErrorBoundary.jsx
+│   │       └── EmptyState.jsx
+│   ├── pages/
+│   │   ├── Home.jsx
+│   │   ├── Products.jsx
+│   │   ├── ProductDetailPage.jsx
+│   │   ├── Cart.jsx
+│   │   ├── Checkout.jsx
+│   │   ├── Orders.jsx
+│   │   ├── Profile.jsx
+│   │   ├── Login.jsx
+│   │   ├── Register.jsx
+│   │   ├── About.jsx
+│   │   ├── Contact.jsx
+│   │   └── NotFound.jsx
+│   ├── services/
+│   │   ├── api.js (updated for Dairy Drop)
+│   │   ├── auth.js
+│   │   └── cart.js
+│   ├── hooks/
+│   │   ├── useAuth.js
+│   │   ├── useCart.js
+│   │   └── useProducts.js
+│   ├── contexts/
+│   │   ├── AuthContext.jsx
+│   │   └── CartContext.jsx
+│   ├── utils/
+│   │   ├── formatters.js
+│   │   └── validators.js
+│   ├── assets/
+│   │   ├── images/
+│   │   └── icons/
+│   ├── App.jsx
+│   └── index.jsx
