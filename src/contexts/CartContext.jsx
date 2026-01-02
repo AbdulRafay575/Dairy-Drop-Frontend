@@ -92,6 +92,10 @@ export const CartProvider = ({ children }) => {
   const removeFromWishlist = (productId) => {
     setWishlist(prev => prev.filter(item => item._id !== productId));
   };
+  const getUniqueProductCount = () => {
+  return cart.length;
+};
+
 
   const isInWishlist = (productId) => {
     return wishlist.some(item => item._id === productId);
@@ -114,6 +118,7 @@ export const CartProvider = ({ children }) => {
     clearCart,
     getCartTotal,
     getCartCount,
+    getUniqueProductCount, // product-based (new)
     addToWishlist,
     removeFromWishlist,
     isInWishlist,

@@ -36,11 +36,11 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { getCartCount, wishlist } = useCart();
+const { getUniqueProductCount, wishlist } = useCart();
 const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  const cartCount = getCartCount();
+const cartCount = getUniqueProductCount();
   const wishlistCount = wishlist.length;
 
   const handleLogout = () => {
