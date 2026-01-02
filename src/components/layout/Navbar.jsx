@@ -49,13 +49,6 @@ const { isAuthenticated, user, logout, isAdmin } = useAuth();
   };
 
   const dairyCategories = [
-    { name: 'Fresh Milk', icon: '🥛', path: '/products?category=milk' },
-    { name: 'Yogurt & Curd', icon: '🍶', path: '/products?category=yogurt' },
-    { name: 'Artisan Cheese', icon: '🧀', path: '/products?category=cheese' },
-    { name: 'Butter & Ghee', icon: '🧈', path: '/products?category=butter' },
-    { name: 'Cream', icon: '🥣', path: '/products?category=cream' },
-    { name: 'Ice Cream', icon: '🍦', path: '/products?category=ice-cream' },
-    { name: 'Paneer', icon: '🧀', path: '/products?category=paneer' },
   ];
 
   return (
@@ -200,15 +193,24 @@ const { isAuthenticated, user, logout, isAdmin } = useAuth();
               </DropdownMenu>
             ) : (
               <div className="hidden md:flex items-center space-x-3">
-                <Button variant="outline" size="sm" className="border-gray-300 hover:border-blue-400 text-gray-700" asChild>
-                  <Link to="/login">Login</Link>
-                </Button>
-                <Button size="sm" className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/30" asChild>
-                  <Link to="/register">
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Sign Up
-                  </Link>
-                </Button>
+                <Button 
+  size="sm" 
+  className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/30" 
+  asChild
+>
+  <Link to="/login">
+    Login
+  </Link>
+</Button>
+<Button 
+  size="sm" 
+  className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/30" 
+  asChild
+>
+  <Link to="/register">
+    Sign Up
+  </Link>
+</Button>
               </div>
             )}
 
@@ -244,61 +246,47 @@ const { isAuthenticated, user, logout, isAdmin } = useAuth();
             </div>
 
             {/* Mobile Categories */}
-            <div className="mt-4 mb-4">
-              <h3 className="font-semibold text-sm mb-3 px-4 text-gray-700">Browse Categories</h3>
-              <div className="grid grid-cols-2 gap-3 px-4">
-                {dairyCategories.map((category) => (
-                  <Link
-                    key={category.name}
-                    to={category.path}
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all group"
-                  >
-                    <span className="text-2xl group-hover:scale-110 transition-transform">{category.icon}</span>
-                    <div>
-                      <span className="text-sm font-medium text-gray-800 block">{category.name}</span>
-                      <span className="text-xs text-gray-500 group-hover:text-blue-600">Shop Now →</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
+            
 
             {/* Mobile Links */}
-            <div className="space-y-1 px-4 mb-4">
-              <Link
-                to="/"
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-3 py-3 px-4 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group"
-              >
-                <Home className="h-4 w-4 group-hover:text-blue-600" />
-                Home
-              </Link>
-              <Link
-                to="/products"
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-3 py-3 px-4 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group"
-              >
-                <ShoppingCart className="h-4 w-4 group-hover:text-blue-600" />
-                Shop All Products
-              </Link>
-              <Link
-                to="/about"
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-3 py-3 px-4 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group"
-              >
-                <Info className="h-4 w-4 group-hover:text-blue-600" />
-                Our Story
-              </Link>
-              <Link
-                to="/contact"
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-3 py-3 px-4 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group"
-              >
-                <Phone className="h-4 w-4 group-hover:text-blue-600" />
-                Contact Us
-              </Link>
-            </div>
+           <div className="space-y-1 px-4 mb-4 flex flex-col items-center">
+  <Link
+    to="/"
+    onClick={() => setIsMenuOpen(false)}
+    className="flex items-center justify-center gap-3 py-3 px-4 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group w-full max-w-xs"
+  >
+    <Home className="h-4 w-4 group-hover:text-blue-600" />
+    Home
+  </Link>
+
+  <Link
+    to="/products"
+    onClick={() => setIsMenuOpen(false)}
+    className="flex items-center justify-center gap-3 py-3 px-4 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group w-full max-w-xs"
+  >
+    <ShoppingCart className="h-4 w-4 group-hover:text-blue-600" />
+    Shop All Products
+  </Link>
+
+  <Link
+    to="/about"
+    onClick={() => setIsMenuOpen(false)}
+    className="flex items-center justify-center gap-3 py-3 px-4 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group w-full max-w-xs"
+  >
+    <Info className="h-4 w-4 group-hover:text-blue-600" />
+    Our Story
+  </Link>
+
+  <Link
+    to="/contact"
+    onClick={() => setIsMenuOpen(false)}
+    className="flex items-center justify-center gap-3 py-3 px-4 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group w-full max-w-xs"
+  >
+    <Phone className="h-4 w-4 group-hover:text-blue-600" />
+    Contact Us
+  </Link>
+</div>
+
 
             {/* Mobile Auth Links */}
             {!isAuthenticated ? (

@@ -317,23 +317,7 @@ const ProductDetailPage = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="space-y-8"
           >
-            {/* Badges */}
-            <div className="flex flex-wrap gap-3">
-              <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0 shadow-lg shadow-blue-500/30">
-                <Sparkles className="h-3 w-3 mr-1" />
-                Premium Dairy
-              </Badge>
-              <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-lg shadow-green-500/30">
-                <Leaf className="h-3 w-3 mr-1" />
-                Farm Fresh
-              </Badge>
-              {product.rating?.average >= 4.5 && (
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg shadow-amber-500/30">
-                  <Award className="h-3 w-3 mr-1" />
-                  Award Winning
-                </Badge>
-              )}
-            </div>
+           
 
             {/* Title */}
             <div>

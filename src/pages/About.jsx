@@ -354,7 +354,7 @@ const About = () => {
                         initial={{ x: index % 2 === 0 ? -20 : 20, opacity: 0 }}
                         whileInView={{ x: 0, opacity: 1 }}
                         transition={{ duration: 0.8 }}
-                        className={`absolute -top-8 ${index % 2 === 0 ? 'left-0' : 'right-0'}`}
+                        className={`absolute -top-20 ${index % 2 === 0 ? 'left-0' : 'right-0'}`}
                       >
                         <div className="text-7xl md:text-8xl font-black text-gray-200/50 leading-none">
                           {item.year}

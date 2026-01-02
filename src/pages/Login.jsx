@@ -276,10 +276,6 @@ const Login = () => {
                   </Button>
                 </form>
 
-                {/* Divider */}
-               
-                
-
                 {/* Sign Up Link */}
                 <div className="text-center mt-8 pt-6 border-t border-gray-700/50">
                   <p className="text-gray-400">

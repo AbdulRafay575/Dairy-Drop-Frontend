@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Filter, Grid3x3, List, Search, Star, ShoppingCart, ChevronRight, X } from 'lucide-react';
+import { Filter, Grid3x3, List, Search, Star, ShoppingCart, ChevronRight, X, Sparkles, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,8 +10,6 @@ import ProductGrid from '@/components/products/ProductGrid';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import { apiService } from '@/services/api';
-
-// Import the ProductFilters component from the correct path
 import ProductFilters from '../components/products/ProductFilters';
 
 const Products = () => {
@@ -73,7 +71,6 @@ const Products = () => {
     try {
       setLoading(true);
       
-      // Clean up filters to remove undefined values
       const cleanFilters = {};
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== '') {
@@ -91,7 +88,6 @@ const Products = () => {
         ...cleanFilters
       };
 
-      // Convert arrays to strings for query params
       if (queryParams.category && Array.isArray(queryParams.category)) {
         queryParams.category = queryParams.category.join(',');
       }
@@ -187,6 +183,16 @@ const Products = () => {
     visible: { opacity: 1, y: 0 }
   };
 
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
   if (loading && products.length === 0) {
     return (
       <div className="min-h-screen bg-white">
@@ -202,65 +208,112 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white"
+      {/* Cinematic Hero Section */}
+      <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.7)),
+            url('https://images.unsplash.com/photo-1550583722-459e5b2c0376?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80&blur=20')
+          `,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex mb-4">
-              <span className="text-sm font-semibold text-blue-600 tracking-wide uppercase">
-                PREMIUM DAIRY COLLECTION
-              </span>
-            </div>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">
-              <span className="block text-gray-900">Farm-Fresh</span>
-              <span className="block text-blue-600">Dairy Selection</span>
-            </h1>
-            <p className="text-xl text-gray-600 leading-relaxed">
-              Handpicked dairy products from trusted farms. Experience purity in every drop.
-            </p>
-          </div>
+        {/* Animated Particles */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white/30 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -20, 0],
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
         </div>
-      </motion.div>
+
+        <div className="container relative mx-auto px-4 py-12">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={staggerContainer}
+            className="max-w-5xl mx-auto text-center"
+          >
+            
+
+            <motion.div variants={fadeInUp} className="space-y-8">
+              <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-none">
+               
+                <span className="block bg-gradient-to-r from-cyan-400 via-white to-blue-400 bg-clip-text text-transparent mt-4">
+                  Dairy Selection
+                </span>
+              </h1>
+              
+              <p className="text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto font-light">
+                Handpicked dairy products from trusted farms. Experience purity in every drop.
+              </p>
+            </motion.div>
+
+            {/* Centered Search Bar */}
+            <motion.form 
+              variants={fadeInUp}
+              onSubmit={handleSearch} 
+              className="relative max-w-2xl mx-auto mt-12"
+            >
+              <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-400" />
+              <Input
+                placeholder="Search for milk, cheese, yogurt, butter, ice cream..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-14 h-16 text-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-cyan-500/20 rounded-full"
+              />
+              <Button 
+                type="submit" 
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0 rounded-full px-8"
+              >
+                Search
+              </Button>
+            </motion.form>
+
+            <motion.div 
+              variants={fadeInUp}
+              className="mt-8 flex items-center justify-center gap-4 text-gray-300"
+            >
+              <Clock className="h-4 w-4" />
+              <span>Same-day delivery available</span>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 pb-20">
-        {/* Search and Controls */}
+      <div className="container mx-auto px-4 pb-20 -mt-8 relative z-10">
+        {/* Filters and Controls */}
         <motion.div 
           initial="hidden"
           animate="visible"
           variants={fadeInUp}
           transition={{ delay: 0.2 }}
-          className="mb-12"
+          className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-200"
         >
-          <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto mb-8">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <Input
-              placeholder="Search for milk, cheese, yogurt..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-blue-600 rounded-2xl shadow-sm"
-            />
-            <Button 
-              type="submit" 
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-10 bg-blue-600 hover:bg-blue-700"
-            >
-              Search
-            </Button>
-          </form>
-
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 pb-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-3">
               <span className="text-gray-600">
                 {pagination.total} premium products
               </span>
               {activeFilterCount > 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-full font-medium">
+                  <span className="text-xs bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-3 py-1.5 rounded-full font-medium">
                     {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''}
                   </span>
                   <Button 
@@ -397,7 +450,7 @@ const Products = () => {
                   </p>
                   <Button 
                     onClick={handleResetFilters}
-                    className="bg-blue-600 hover:bg-blue-700 h-12 px-8"
+                    className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white h-12 px-8"
                   >
                     Clear All Filters
                   </Button>
@@ -523,7 +576,7 @@ const ProductListView = ({ products }) => {
                 size="lg"
                 onClick={() => addToCart(product)}
                 disabled={!product.isAvailable || product.quantity === 0}
-                className="bg-blue-600 hover:bg-blue-700 h-11 min-w-[140px]"
+                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white border-0"
               >
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 Add to Cart
@@ -541,7 +594,7 @@ const ProductListView = ({ products }) => {
               </Button>
             </div>
           </div>
-        </motion.div>
+        </motion.div> 
       ))}
     </motion.div>
   );

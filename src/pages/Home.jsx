@@ -105,7 +105,7 @@ const Home = () => {
     {
       icon: <Truck className="h-8 w-8" />,
       title: 'Same Day Delivery',
-      description: 'Order before 12 PM, get it same day',
+      description: 'Order 12 PM, get it same day',
       color: 'text-blue-600'
     },
     {
@@ -122,7 +122,7 @@ const Home = () => {
     },
     {
       icon: <Zap className="h-8 w-8" />,
-      title: 'Temperature Controlled',
+      title: 'Thermostatic',
       description: 'Always chilled delivery',
       color: 'text-purple-600'
     }
@@ -345,19 +345,21 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-cyan-50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         
         {/* Icon Container */}
-        <div className={`relative mb-6 p-4 rounded-2xl bg-gradient-to-br from-white to-gray-100 shadow-lg w-fit group-hover:scale-110 group-hover:bg-gradient-to-br ${feature.color} transition-all duration-300`}>
-          {feature.icon}
-        </div>
+        <div className={`relative mb-6 p-4 rounded-2xl bg-gradient-to-br from-white to-gray-100 shadow-lg w-fit mx-auto group-hover:scale-110 group-hover:bg-gradient-to-br ${feature.color} transition-all duration-300`}>
+  {feature.icon}
+</div>
+
         
         {/* Content - Added z-index to appear above background */}
-        <div className="relative z-10">
-          <h3 className="text-2xl font-bold mb-3 text-gray-900 group-hover:text-gray-900 transition-colors">
-            {feature.title}
-          </h3>
-          <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors">
-            {feature.description}
-          </p>
-        </div>
+        <div className="relative z-10 text-center flex flex-col items-center">
+  <h3 className="text-2xl font-bold mb-3 text-gray-900 group-hover:text-gray-900 transition-colors">
+    {feature.title}
+  </h3>
+  <p className="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors">
+    {feature.description}
+  </p>
+</div>
+
         
         {/* Animated Underline */}
         <div className="absolute bottom-0 left-0 w-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 group-hover:w-full transition-all duration-500"></div>
@@ -641,34 +643,37 @@ const Home = () => {
                 whileHover={{ y: -8 }}
               >
                 <Card className="border-0 bg-gray-800/50 backdrop-blur-sm shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500">
-                  <CardContent className="p-8">
-                    {/* Stars */}
-                    <div className="flex mb-6">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className="h-5 w-5 fill-amber-400 text-amber-400"
-                        />
-                      ))}
-                    </div>
-                    
-                    {/* Quote */}
-                    <p className="text-gray-200 text-lg italic mb-8 leading-relaxed">
-                      "{testimonial.content}"
-                    </p>
-                    
-                    {/* Author */}
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-xl">
-                        {testimonial.avatar}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-white">{testimonial.name}</h4>
-                        <p className="text-gray-400 text-sm">{testimonial.role}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+  <CardContent className="p-8 flex flex-col items-center text-center">
+    
+    {/* Stars */}
+    <div className="flex mb-6 justify-center">
+      {[...Array(5)].map((_, i) => (
+        <Star
+          key={i}
+          className="h-5 w-5 fill-amber-400 text-amber-400"
+        />
+      ))}
+    </div>
+
+    {/* Quote */}
+    <p className="text-gray-200 text-lg italic mb-8 leading-relaxed">
+      "{testimonial.content}"
+    </p>
+
+    {/* Author */}
+    <div className="flex items-center gap-4 justify-center">
+      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-xl">
+        {testimonial.avatar}
+      </div>
+      <div>
+        <h4 className="font-semibold text-white">{testimonial.name}</h4>
+        <p className="text-gray-400 text-sm">{testimonial.role}</p>
+      </div>
+    </div>
+
+  </CardContent>
+</Card>
+
               </motion.div>
             ))}
           </div>
