@@ -119,7 +119,7 @@ const ProductCard = ({ product }) => {
             <div className="absolute inset-0 bg-gradient-to-br from-gray-900/5 to-gray-900/10 z-0"></div>
             {product.images?.[0]?.url ? (
               <img
-                src={product.images[0].url}
+                src={`http://localhost:5000${product.images[0].url}`}
                 alt={product.images[0].alt || product.name}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
               />

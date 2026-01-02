@@ -19,6 +19,7 @@ import {
   Shield,
   Award
 } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import logoIcon from '@/assets/images/apple-touch-icon.png';
@@ -59,12 +60,12 @@ const { isAuthenticated, user, logout, isAdmin } = useAuth();
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2" onClick={() => setIsMenuOpen(false)}>
               <div className="h-9 w-9 rounded-full overflow-hidden shadow-lg shadow-blue-500/30 border border-blue-100">
-  <img
-    src={logoIcon}
-    alt="Dairy Drop Logo"
-    className="h-full w-full object-cover"
-  />
-</div>
+                <img
+                  src={logoIcon}
+                  alt="Dairy Drop Logo"
+                  className="h-full w-full object-cover"
+                />
+              </div>
 
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">

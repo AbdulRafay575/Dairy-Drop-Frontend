@@ -111,10 +111,7 @@ const OrderDetails = ({ order }) => {
             <Printer className="h-4 w-4 mr-2" />
             Print Invoice
           </Button>
-          <Button variant="outline" size="sm">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Contact Customer
-          </Button>
+          
         </div>
       </div>
 
@@ -127,11 +124,7 @@ const OrderDetails = ({ order }) => {
           {statusFlow.map((status, index) => (
             <div key={status.value} className="flex flex-col items-center relative">
               {/* Line between statuses */}
-              {index < statusFlow.length - 1 && (
-                <div className={`absolute top-5 left-1/2 w-full h-0.5 ${
-                  index < currentStatusIndex ? 'bg-primary' : 'bg-gray-200'
-                }`}></div>
-              )}
+              
               
               {/* Status circle */}
               <div className={`

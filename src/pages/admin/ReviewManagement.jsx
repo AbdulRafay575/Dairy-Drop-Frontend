@@ -278,10 +278,7 @@ const ReviewManagement = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => viewReviewDetails(review)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
+                        
                         {!review.isApproved && (
                           <DropdownMenuItem onClick={() => handleUpdateReview(review._id, { isApproved: true })}>
                             <CheckCircle className="h-4 w-4 mr-2" />

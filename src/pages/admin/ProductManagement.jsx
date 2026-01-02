@@ -107,9 +107,11 @@ const ProductManagement = () => {
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = () => {
-    fetchProducts(); // Refresh the list
+  const handleFormSubmitSuccess = (updatedProduct) => {
+    // Refresh the products list
+    fetchProducts();
     setIsFormOpen(false);
+    setSelectedProduct(null);
   };
 
   const getCategoryColor = (category) => {
@@ -146,7 +148,12 @@ const ProductManagement = () => {
             Manage your dairy products inventory
           </p>
         </div>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <Dialog open={isFormOpen} onOpenChange={(open) => {
+          setIsFormOpen(open);
+          if (!open) {
+            setSelectedProduct(null); // Reset selected product when dialog closes
+          }
+        }}>
           <DialogTrigger asChild>
             <Button onClick={handleAddProduct}>
               <Plus className="h-4 w-4 mr-2" />
@@ -161,8 +168,11 @@ const ProductManagement = () => {
             </DialogHeader>
             <ProductForm 
               product={selectedProduct} 
-              onSubmit={handleFormSubmit}
-              onCancel={() => setIsFormOpen(false)}
+              onSubmit={handleFormSubmitSuccess}
+              onCancel={() => {
+                setIsFormOpen(false);
+                setSelectedProduct(null);
+              }}
             />
           </DialogContent>
         </Dialog>
@@ -242,7 +252,7 @@ const ProductManagement = () => {
                       <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                         {product.images?.[0]?.url ? (
                           <img
-                            src={product.images[0].url}
+                            src={`http://localhost:5000${product.images[0].url}`}
                             alt={product.name}
                             className="w-full h-full object-cover"
                           />
@@ -315,14 +325,6 @@ const ProductManagement = () => {
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Product
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Tag className="h-4 w-4 mr-2" />
-                          Update Stock
-                        </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600"
                           onClick={() => handleDeleteProduct(product._id)}
@@ -392,12 +394,11 @@ const ProductManagement = () => {
         <div className="bg-white border rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-  <p className="text-sm text-muted-foreground">Low Stock (&lt; 10)</p>
-  <p className="text-2xl font-bold">
-    {products.filter(p => p.quantity < 10 && p.quantity > 0).length}
-  </p>
-</div>
-
+              <p className="text-sm text-muted-foreground">Low Stock (&lt; 10)</p>
+              <p className="text-2xl font-bold">
+                {products.filter(p => p.quantity < 10 && p.quantity > 0).length}
+              </p>
+            </div>
             <BarChart3 className="h-8 w-8 text-yellow-500" />
           </div>
         </div>

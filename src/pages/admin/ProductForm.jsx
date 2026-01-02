@@ -14,14 +14,16 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { apiService } from '@/services/api';
 
 const ProductForm = ({ product, onSubmit, onCancel }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [images, setImages] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
+  const [newImages, setNewImages] = useState([]); // New images to upload
+  const [imagePreviews, setImagePreviews] = useState([]); // All images shown (existing + new)
+  const [imagesToDelete, setImagesToDelete] = useState([]); // Track existing images to delete
 
   const [formData, setFormData] = useState({
     name: '',
@@ -68,7 +70,14 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         },
         tags: product.tags || []
       });
-      setImagePreviews(product.images?.map(img => ({ url: img.url, name: img.alt })) || []);
+      
+      // Set existing images with their URLs and IDs for tracking
+      setImagePreviews(product.images?.map(img => ({
+        url: img.url,
+        name: img.alt || 'Product Image',
+        isExisting: true,
+        _id: img._id
+      })) || []);
     }
   }, [product]);
 
@@ -95,8 +104,19 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-    const newImages = [];
+    const newImagesArray = [];
     const newPreviews = [];
+
+    // Check total images won't exceed limit
+    const totalAfterAdd = imagePreviews.length + files.length;
+    if (totalAfterAdd > 5) {
+      toast({
+        title: 'Maximum images exceeded',
+        description: `You can only upload up to 5 images. Currently have ${imagePreviews.length} images.`,
+        variant: 'destructive'
+      });
+      return;
+    }
 
     files.forEach(file => {
       if (file.size > 5 * 1024 * 1024) {
@@ -117,30 +137,41 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         return;
       }
 
-      newImages.push(file);
+      newImagesArray.push(file);
       newPreviews.push({
         url: URL.createObjectURL(file),
-        name: file.name
+        name: file.name,
+        isExisting: false,
+        file: file
       });
     });
 
-    setImages([...images, ...newImages]);
+    setNewImages([...newImages, ...newImagesArray]);
     setImagePreviews([...imagePreviews, ...newPreviews]);
+    e.target.value = ''; // Reset file input
   };
 
   const handleRemoveImage = (index) => {
-    const newImages = [...images];
-    const newPreviews = [...imagePreviews];
-
-    // Revoke object URL to prevent memory leaks
-    if (!product && newPreviews[index].url.startsWith('blob:')) {
-      URL.revokeObjectURL(newPreviews[index].url);
+    const imageToRemove = imagePreviews[index];
+    
+    // If it's an existing image, add to deletion list
+    if (imageToRemove.isExisting && imageToRemove._id) {
+      setImagesToDelete(prev => [...prev, imageToRemove._id]);
     }
-
-    newImages.splice(index, 1);
+    
+    // If it's a new image (not yet uploaded), remove from newImages
+    if (!imageToRemove.isExisting && imageToRemove.file) {
+      setNewImages(prev => prev.filter(img => img !== imageToRemove.file));
+      
+      // Revoke object URL to prevent memory leaks
+      if (imageToRemove.url.startsWith('blob:')) {
+        URL.revokeObjectURL(imageToRemove.url);
+      }
+    }
+    
+    // Remove from previews
+    const newPreviews = [...imagePreviews];
     newPreviews.splice(index, 1);
-
-    setImages(newImages);
     setImagePreviews(newPreviews);
   };
 
@@ -209,20 +240,28 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
 
       let response;
       if (product) {
-        // Update existing product
-        response = await apiService.updateProduct(product._id, productData, images);
+        // Update existing product with images to delete
+        response = await apiService.updateProduct(
+          product._id, 
+          productData, 
+          newImages,
+          imagesToDelete
+        );
       } else {
         // Create new product
-        response = await apiService.createProduct(productData, images);
+        response = await apiService.createProduct(productData, newImages);
       }
 
       if (response.success) {
-        toast({
-          title: product ? 'Product Updated' : 'Product Created',
-          description: product ? 'Product updated successfully' : 'New product added successfully',
-        });
-        onSubmit();
-      } else {
+  toast({
+    title: product ? 'Product Updated' : 'Product Created',
+    description: product ? 'Product updated successfully' : 'New product added successfully',
+  });
+
+  // Send updated product back to parent
+  onSubmit(response.data); // <-- Pass the new/updated product
+}
+ else {
         throw new Error(response.message || 'Operation failed');
       }
     } catch (error) {
@@ -234,6 +273,16 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getImageUrl = (preview) => {
+    if (preview.isExisting) {
+      // For existing images, use the full URL
+      return `http://localhost:5000${preview.url}`;
+    } else {
+      // For new images, use the blob URL
+      return preview.url;
     }
   };
 
@@ -416,6 +465,37 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
                 />
               </div>
             </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="carbohydrate">Carbohydrates (g)</Label>
+                <Input
+                  id="carbohydrate"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={formData.nutritionalFacts.carbohydrateContent}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    nutritionalFacts: { ...prev.nutritionalFacts, carbohydrateContent: e.target.value }
+                  }))}
+                  placeholder="4.8"
+                />
+              </div>
+              <div>
+                <Label htmlFor="calcium">Calcium (mg)</Label>
+                <Input
+                  id="calcium"
+                  type="number"
+                  min="0"
+                  value={formData.nutritionalFacts.calcium}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    nutritionalFacts: { ...prev.nutritionalFacts, calcium: e.target.value }
+                  }))}
+                  placeholder="120"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Tags */}
@@ -454,7 +534,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
           </div>
 
           {/* Availability */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 mt-4">
             <Switch
               id="isAvailable"
               checked={formData.isAvailable}
@@ -467,8 +547,8 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
         {/* Images Tab */}
         <TabsContent value="images" className="space-y-4 pt-4">
           <div className="space-y-2">
-            <Label>Product Images</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <Label>Product Images (Max 5)</Label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary/50 hover:bg-primary/5 transition-colors">
               <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground mb-2">
                 Drag & drop images here, or click to browse
@@ -476,6 +556,7 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
               <p className="text-xs text-muted-foreground mb-4">
                 Maximum file size: 5MB. Supported formats: JPG, PNG, WebP
               </p>
+              
               <Input
                 type="file"
                 accept="image/*"
@@ -484,34 +565,53 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
                 className="hidden"
                 id="image-upload"
               />
-              <Label htmlFor="image-upload">
-                <Button variant="outline" type="button">
-                  Select Images
-                </Button>
-              </Label>
+              <Button 
+                variant="outline" 
+                type="button"
+                onClick={() => document.getElementById('image-upload').click()}
+                disabled={imagePreviews.length >= 5}
+              >
+                Select Images ({imagePreviews.length}/5)
+              </Button>
             </div>
           </div>
 
+          {/* Image Previews */}
           {imagePreviews.length > 0 && (
             <div>
               <Label>Selected Images ({imagePreviews.length}/5)</Label>
-              <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mt-2">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-2">
                 {imagePreviews.map((preview, index) => (
                   <div key={index} className="relative group">
                     <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
                       <img
-                        src={preview.url}
+                        src={getImageUrl(preview)}
                         alt={preview.name}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNFOEU4RTgiLz48cGF0aCBkPSJNNjIgNDJDNjIgNDguNjI3IDU2LjYyNyA1NCA1MCA1NFM0OCA1NC40MiAzOCA2MiIgc3Ryb2tlPSIjOTk5IiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4=';
+                        }}
                       />
                     </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveImage(index)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                      title="Remove image"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
+                    {preview.isExisting && (
+                      <div className="absolute bottom-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded opacity-75">
+                        Existing
+                      </div>
+                    )}
+                    {index === 0 && (
+                      <div className="absolute bottom-1 right-1 bg-green-500 text-white text-xs px-2 py-1 rounded opacity-75">
+                        Main
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -528,6 +628,8 @@ const ProductForm = ({ product, onSubmit, onCancel }) => {
                   <li>Use high-quality images with white background</li>
                   <li>Show product from multiple angles</li>
                   <li>Include nutritional label if available</li>
+                  <li>Maximum 5 images per product</li>
+                  <li>Deleting an existing image will remove it permanently</li>
                 </ul>
               </div>
             </div>

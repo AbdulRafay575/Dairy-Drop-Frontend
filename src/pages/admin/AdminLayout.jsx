@@ -19,6 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -71,36 +72,22 @@ const AdminLayout = () => {
                 {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
               
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Shield className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="font-bold text-lg">Dairy Drop</h1>
-                  <p className="text-xs text-muted-foreground">Admin Panel</p>
-                </div>
-              </div>
+              <Link to="/" className="flex items-center gap-2 cursor-pointer">
+  <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+    <Shield className="h-5 w-5 text-white" />
+  </div>
+  <div>
+    <h1 className="font-bold text-lg">Dairy Drop</h1>
+    <p className="text-xs text-muted-foreground">Admin Panel</p>
+  </div>
+</Link>
+
             </div>
 
-            {/* Center - Search */}
-            <div className="flex-1 max-w-2xl mx-4 hidden lg:block">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search orders, products, users..."
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
+         
             {/* Right side - User & Notifications */}
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center">
-                  3
-                </Badge>
-              </Button>
+             
               
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
@@ -129,30 +116,6 @@ const AdminLayout = () => {
           w-64 bg-white border-r transition-transform duration-200 ease-in-out
         `}>
           <div className="p-4">
-            {/* Quick Stats */}
-            <div className="mb-6">
-              <h3 className="text-xs uppercase font-semibold text-muted-foreground mb-3">
-                Today's Overview
-              </h3>
-              <div className="space-y-2">
-                {stats.map((stat, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 rounded hover:bg-gray-50">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-1 rounded ${stat.color}`}>
-                        <stat.icon className="h-3 w-3 text-white" />
-                      </div>
-                      <span className="text-sm">{stat.label}</span>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold">{stat.value}</p>
-                      <p className={`text-xs ${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-                        {stat.change}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             <Separator className="my-4" />
 

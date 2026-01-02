@@ -1,4 +1,5 @@
-const API_BASE = 'https://dairydrop.onrender.com';
+// const API_BASE = 'https://dairydrop.onrender.com';
+const API_BASE = 'http://localhost:5000';
 
 class ApiService {
     constructor() {
@@ -176,24 +177,41 @@ class ApiService {
             body: JSON.stringify({ reason }),
         });
     }
+// ✅ Review endpoints (add these to your existing apiService)
+async createReview(reviewData) {
+  return this.request('/api/reviews', {
+    method: 'POST',
+    body: JSON.stringify(reviewData),
+  });
+}
 
-    // ✅ Review endpoints
-    async createReview(reviewData) {
-        return this.request('/api/reviews', {
-            method: 'POST',
-            body: JSON.stringify(reviewData),
-        });
-    }
+async getProductReviews(productId) {
+  return this.request(`/api/reviews/product/${productId}`);
+}
 
-    async getProductReviews(productId) {
-        return this.request(`/api/reviews/product/${productId}`);
-    }
+// ADD THIS METHOD - Get all reviews for admin
+async getAllReviews() {
+  return this.request('/api/reviews');
+}
 
-    async markReviewHelpful(reviewId) {
-        return this.request(`/api/reviews/${reviewId}/helpful`, {
-            method: 'PUT',
-        });
-    }
+async updateReviewApproval(reviewId, updates) {
+  return this.request(`/api/reviews/${reviewId}/approval`, {
+    method: 'PUT',
+    body: JSON.stringify(updates),
+  });
+}
+
+async deleteReview(reviewId) {
+  return this.request(`/api/reviews/${reviewId}`, {
+    method: 'DELETE',
+  });
+}
+
+async markReviewHelpful(reviewId) {
+  return this.request(`/api/reviews/${reviewId}/helpful`, {
+    method: 'PUT',
+  });
+}
 
     // ✅ Admin endpoints
     async createProduct(productData, images) {
@@ -221,28 +239,41 @@ class ApiService {
         });
     }
 
-    async updateProduct(id, productData, images = []) {
-        const formData = new FormData();
-        
-        Object.keys(productData).forEach(key => {
-            if (key === 'nutritionalFacts') {
-                formData.append(key, JSON.stringify(productData[key]));
-            } else if (key === 'tags') {
-                formData.append(key, productData[key].join(','));
-            } else {
-                formData.append(key, productData[key]);
-            }
-        });
-        
-        images.forEach((image, index) => {
-            formData.append('images', image);
-        });
-
-        return this.request(`/api/products/${id}`, {
-            method: 'PUT',
-            body: formData,
-        });
+async updateProduct(id, productData, images = [], imagesToDelete = []) {
+  const formData = new FormData();
+  
+  // Add product data
+  Object.keys(productData).forEach(key => {
+    if (key === 'nutritionalFacts') {
+      formData.append(key, JSON.stringify(productData[key]));
+    } else if (key === 'tags') {
+      formData.append(key, productData[key].join(','));
+    } else {
+      formData.append(key, productData[key]);
     }
+  });
+  
+  // Add images to delete
+  if (imagesToDelete.length > 0) {
+    formData.append('imagesToDelete', JSON.stringify(imagesToDelete));
+  }
+  
+  // Add new images
+  images.forEach((image, index) => {
+    formData.append('images', image);
+  });
+
+  return this.request(`/api/products/${id}`, {
+    method: 'PUT',
+    body: formData,
+  });
+}  
+// ✅ Delete user (Admin only)
+async deleteUser(userId) {
+  return this.request(`/api/users/${userId}`, {
+    method: 'DELETE',
+  });
+}
 
     async deleteProduct(id) {
         return this.request(`/api/products/${id}`, {

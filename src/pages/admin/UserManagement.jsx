@@ -46,7 +46,15 @@ const UserManagement = () => {
       setLoading(true);
       const response = await apiService.getAllUsers();
       if (response.success) {
-        setUsers(response.data.users);
+        // Sort users: admins first, then customers, then by creation date (newest first)
+        const sortedUsers = response.data.users.sort((a, b) => {
+          // Admins first
+          if (a.role === 'admin' && b.role !== 'admin') return -1;
+          if (a.role !== 'admin' && b.role === 'admin') return 1;
+          // Then by date (newest first)
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        });
+        setUsers(sortedUsers);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -83,18 +91,13 @@ const UserManagement = () => {
     setFilteredUsers(filtered);
   };
 
-  const handleUpdateUser = async (userId, updates) => {
-    try {
-      const response = await apiService.updateUser(userId, updates);
-      if (response.success) {
-        fetchUsers(); // Refresh users
-      }
-    } catch (error) {
-      console.error('Error updating user:', error);
+  const handleDeleteUser = async (userId, userRole) => {
+    // Prevent deletion of admin users
+    if (userRole === 'admin') {
+      alert('Cannot delete admin user');
+      return;
     }
-  };
 
-  const handleDeleteUser = async (userId) => {
     if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       return;
     }
@@ -255,43 +258,26 @@ const UserManagement = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => viewUserDetails(user)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Mail className="h-4 w-4 mr-2" />
-                          Send Email
-                        </DropdownMenuItem>
-                        {user.role === 'user' ? (
-                          <DropdownMenuItem onClick={() => handleUpdateUser(user._id, { role: 'admin' })}>
-                            <Shield className="h-4 w-4 mr-2" />
-                            Make Admin
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onClick={() => handleUpdateUser(user._id, { role: 'user' })}>
-                            <User className="h-4 w-4 mr-2" />
-                            Remove Admin
+                       
+                        
+                        {/* Only show delete for non-admin users */}
+                        {user.role === 'user' && (
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => handleDeleteUser(user._id, user.role)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Usera
                           </DropdownMenuItem>
                         )}
-                        {user.isActive ? (
-                          <DropdownMenuItem onClick={() => handleUpdateUser(user._id, { isActive: false })}>
-                            <XCircle className="h-4 w-4 mr-2" />
-                            Deactivate
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onClick={() => handleUpdateUser(user._id, { isActive: true })}>
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Activate
+                        
+                        {/* Admin users cannot be deleted */}
+                        {user.role === 'admin' && (
+                          <DropdownMenuItem className="text-gray-400 cursor-not-allowed" disabled>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Cannot delete admin
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => handleDeleteUser(user._id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete User
-                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -441,9 +427,20 @@ const UserManagement = () => {
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Close
                 </Button>
-                <Button>
-                  Edit User
-                </Button>
+                {/* Only show delete button for non-admin users */}
+                {selectedUser.role === 'user' && (
+                  <Button 
+                    variant="destructive"
+                    onClick={() => {
+                      setIsDialogOpen(false);
+                      setTimeout(() => {
+                        handleDeleteUser(selectedUser._id, selectedUser.role);
+                      }, 300);
+                    }}
+                  >
+                    Delete User
+                  </Button>
+                )}
               </div>
             </div>
           )}
