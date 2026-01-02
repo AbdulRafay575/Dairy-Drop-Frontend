@@ -116,7 +116,9 @@ const Checkout = () => {
         clearCart();
 
         // Navigate to order confirmation
-        navigate(`/order-confirmation/${response.data.order._id}`);
+        // navigate(`/order-confirmation/${response.data.order._id}`);
+        navigate(`/`);
+
       }
     } catch (error) {
       console.error('Order placement error:', error);

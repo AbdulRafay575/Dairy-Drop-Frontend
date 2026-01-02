@@ -1,281 +1,505 @@
 import React, { useState, useEffect } from 'react';
-import { Filter, X, Star, Tag, Palette, Check, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { motion } from 'framer-motion';
+import { Search, Filter, X, Sparkles, DollarSign, Star, Clock, Droplets, Beef, Package, Truck } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const ProductFilters = ({ categories = [], brands = [], filters, onFilterChange, onReset }) => {
-  const [tempFilters, setTempFilters] = useState(filters);
+const ProductFilters = ({ categories = [], brands = [], filters, onApply, onReset }) => {
+  const [temp, setTemp] = useState(filters);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilterCount, setActiveFilterCount] = useState(0);
 
-  useEffect(() => setTempFilters(filters), [filters]);
+  useEffect(() => {
+    setTemp(filters);
+  }, [filters]);
 
-  const colorOptions = [
-    { value: 'white', label: 'White', bg: 'bg-white border' },
-    { value: 'cream', label: 'Cream', bg: 'bg-amber-50' },
-    { value: 'yellow', label: 'Yellow', bg: 'bg-amber-200' },
-    { value: 'blue', label: 'Blue', bg: 'bg-blue-200' },
-    { value: 'green', label: 'Green', bg: 'bg-emerald-200' },
-  ];
+  // Calculate active filters
+  useEffect(() => {
+    const count = Object.entries(filters).reduce((acc, [key, value]) => {
+      if (key === 'search' && value) return acc + 1;
+      if (Array.isArray(value) && value.length > 0) return acc + value.length;
+      if (typeof value === 'string' && value && key !== 'sort') return acc + 1;
+      if (typeof value === 'number' && value) return acc + 1;
+      if (typeof value === 'boolean' && value) return acc + 1;
+      return acc;
+    }, 0);
+    setActiveFilterCount(count);
+  }, [filters]);
 
-  const handleTempChange = (key, value) => setTempFilters(prev => ({ ...prev, [key]: value }));
-
-  const toggleArrayFilter = (key, value) => {
-    const current = tempFilters[key] || [];
-    const updated = current.includes(value) ? current.filter(v => v !== value) : [...current, value];
-    setTempFilters(prev => ({ ...prev, [key]: updated }));
+  const update = (key, value) => {
+    setTemp(prev => ({ ...prev, [key]: value }));
   };
 
-  const applyFilters = () => onFilterChange(tempFilters);
-
-  const handleResetAll = () => {
-    const resetFilters = { category: [], brand: [], color: [], minPrice: 0, maxPrice: 5000, minFat: 0, maxFat: 50, minRating: undefined, inStock: undefined, sameDayDelivery: undefined, sort: 'newest', search: undefined };
-    setTempFilters(resetFilters);
-    onReset();
+  const toggleArray = (key, value) => {
+    const arr = temp[key] || [];
+    update(
+      key,
+      arr.includes(value)
+        ? arr.filter(v => v !== value)
+        : [...arr, value]
+    );
   };
 
-  const getActiveFilterCount = (filtersObj) =>
-    Object.keys(filtersObj).filter(
-      k => filtersObj[k] !== undefined && !(Array.isArray(filtersObj[k]) && filtersObj[k].length === 0)
-    ).length;
+  const clearFilter = (key, value = null) => {
+    if (value === null) {
+      update(key, Array.isArray(filters[key]) ? [] : '');
+    } else if (Array.isArray(filters[key])) {
+      update(key, filters[key].filter(v => v !== value));
+    }
+  };
 
-  const activeFilterCount = getActiveFilterCount(tempFilters);
+  const applyFilters = () => {
+    onApply({
+      ...temp,
+      minPrice: temp.minPrice ? Number(temp.minPrice) : '',
+      maxPrice: temp.maxPrice ? Number(temp.maxPrice) : '',
+      minRating: temp.minRating ? Number(temp.minRating) : '',
+      minShelfLife: temp.minShelfLife ? Number(temp.minShelfLife) : '',
+      maxShelfLife: temp.maxShelfLife ? Number(temp.maxShelfLife) : '',
+      minFat: temp.minFat ? Number(temp.minFat) : '',
+      maxFat: temp.maxFat ? Number(temp.maxFat) : '',
+      minProtein: temp.minProtein ? Number(temp.minProtein) : '',
+      maxProtein: temp.maxProtein ? Number(temp.maxProtein) : '',
+    });
+  };
 
-  const FilterSection = ({ title, icon: Icon, children }) => (
-    <div className="space-y-4 pb-6 border-b border-gray-200 last:border-0 last:pb-0">
-      <div className="flex items-center gap-3">
-        {Icon && (
-          <div className="p-2 rounded-lg bg-gradient-to-br from-blue-50 to-cyan-50">
-            <Icon className="h-4 w-4 text-blue-600" />
-          </div>
-        )}
-        <h4 className="font-semibold text-sm text-gray-900 tracking-wide">{title}</h4>
-      </div>
-      <div className="space-y-3">{children}</div>
-    </div>
+  // Filter categories/brands based on search
+  const filteredCategories = categories.filter(c => 
+    c.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const filteredBrands = brands.filter(b => 
+    b.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  return (
-    <div className="space-y-6 max-h-[700px]">
-      {/* Header */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-50 to-cyan-50">
-              <Filter className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg text-gray-900">Refine Results</h3>
-              <p className="text-xs text-gray-500">Select your preferences</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleResetAll} className="text-gray-500 hover:text-gray-700 text-xs">
-            <X className="h-3 w-3 mr-1" /> Clear All
-          </Button>
-        </div>
+  const fadeIn = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 }
+  };
 
-        {/* Active Filters Badge */}
-        {activeFilterCount > 0 && (
-          <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
-            <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
-            <span className="text-xs font-medium text-blue-700">
-              {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''} selected
-            </span>
+  return (
+    <div className="border border-gray-200 rounded-2xl p-6 bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            
+            
           </div>
-        )}
+          {activeFilterCount > 0 && (
+            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+              {activeFilterCount} active
+            </Badge>
+          )}
+        </div>
+        
       </div>
 
-      <ScrollArea className="h-[550px] pr-4">
-        <div className="space-y-6">
-          {/* Price Range */}
-          <FilterSection title="Minimum Price" icon={Tag}>
-            <div className="space-y-4">
-              <Slider
-                value={[tempFilters.minPrice || 0, 5000]}
-                max={5000}
-                step={100}
-                onValueChange={(value) => handleTempChange('minPrice', value[0])}
-                className="w-full"
-              />
-              <div className="flex justify-between text-sm">
-                <div className="text-center">
-                  <div className="font-semibold text-gray-900">₹{tempFilters.minPrice || 0}</div>
-                  <div className="text-xs text-gray-500">Min</div>
+      {/* Quick Clear Section */}
+      <AnimatePresence>
+        {activeFilterCount > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-6 p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">Active filters</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onReset}
+                className="text-xs h-7 px-2 hover:bg-white/50"
+              >
+                Clear all
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {filters.category?.map(cat => (
+                <Badge key={cat} variant="outline" className="gap-1 text-xs">
+                  {cat}
+                  <button onClick={() => clearFilter('category', cat)}>
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+              {filters.minPrice && (
+                <Badge variant="outline" className="gap-1 text-xs">
+                  Min ${filters.minPrice}
+                  <button onClick={() => clearFilter('minPrice')}>
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              )}
+              {filters.minRating && (
+                <Badge variant="outline" className="gap-1 text-xs">
+                  {filters.minRating}★ & above
+                  <button onClick={() => clearFilter('minRating')}>
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ScrollArea className="h-[500px] pr-4">
+        <div className="space-y-8">
+          {/* PRICE */}
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+            className="space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-md bg-gradient-to-br from-emerald-50 to-green-50">
+<DollarSign className="w-4 h-4 text-emerald-600" />
                 </div>
-                <div className="text-center">
-                  <div className="font-semibold text-gray-900">₹5000</div>
-                  <div className="text-xs text-gray-500">Max</div>
-                </div>
+                <h4 className="font-semibold text-sm text-gray-900">Price Range</h4>
+              </div>
+              <span className="text-xs text-gray-500">$</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="minPrice" className="text-xs text-gray-500 mb-1 block font-medium">Min</Label>
+                <Input
+                  id="minPrice"
+                  placeholder="0"
+                  value={temp.minPrice || ''}
+                  onChange={(e) => update('minPrice', e.target.value)}
+                  className="h-10 border-gray-300 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <Label htmlFor="maxPrice" className="text-xs text-gray-500 mb-1 block font-medium">Max</Label>
+                <Input
+                  id="maxPrice"
+                  placeholder="10,000"
+                  value={temp.maxPrice || ''}
+                  onChange={(e) => update('maxPrice', e.target.value)}
+                  className="h-10 border-gray-300 focus:border-blue-500"
+                />
               </div>
             </div>
-          </FilterSection>
+          </motion.div>
 
-          {/* Categories */}
-          {categories.length > 0 && (
-            <FilterSection title="Categories">
-              <div className="space-y-2">
-                {categories.map((cat) => (
-                  <motion.div key={cat} whileHover={{ x: 4 }} className="flex items-center space-x-3">
-                    <Checkbox
-                      id={`cat-${cat}`}
-                      checked={(tempFilters.category || []).includes(cat)}
-                      onCheckedChange={() => toggleArrayFilter('category', cat)}
-                      className="h-5 w-5 border-2 border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                    />
-                    <Label htmlFor={`cat-${cat}`} className="text-sm text-gray-700 cursor-pointer flex-1 capitalize hover:text-gray-900">
-                      {cat.replace('-', ' ')}
-                    </Label>
-                  </motion.div>
-                ))}
+          {/* RATING */}
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+            transition={{ delay: 0.1 }}
+            className="space-y-3"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-md bg-gradient-to-br from-amber-50 to-orange-50">
+                <Star className="w-4 h-4 text-amber-600" />
               </div>
-            </FilterSection>
-          )}
-
-          {/* Brands */}
-          {brands.length > 0 && (
-            <FilterSection title="Brands">
-              <div className="space-y-2">
-                {brands.slice(0, 6).map((b) => (
-                  <motion.div key={b} whileHover={{ x: 4 }} className="flex items-center space-x-3">
-                    <Checkbox
-                      id={`brand-${b}`}
-                      checked={(tempFilters.brand || []).includes(b)}
-                      onCheckedChange={() => toggleArrayFilter('brand', b)}
-                      className="h-5 w-5 border-2 border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                    />
-                    <Label htmlFor={`brand-${b}`} className="text-sm text-gray-700 cursor-pointer hover:text-gray-900">{b}</Label>
-                  </motion.div>
-                ))}
-              </div>
-            </FilterSection>
-          )}
-
-          {/* Color */}
-          <FilterSection title="Color" icon={Palette}>
-            <div className="grid grid-cols-5 gap-2">
-              {colorOptions.map((color) => {
-                const selected = (tempFilters.color || []).includes(color.value);
-                return (
-                  <motion.button
-                    key={color.value}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => toggleArrayFilter('color', color.value)}
-                    className={`relative w-10 h-10 rounded-full ${color.bg} border-2 ${
-                      selected ? 'border-blue-600 shadow-lg shadow-blue-500/30' : 'border-gray-300'
-                    } flex items-center justify-center transition-all group`}
-                    title={color.label}
-                  >
-                    {selected && <Check className="h-4 w-4 text-blue-600" />}
-                    <div className="absolute -bottom-6 text-xs text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {color.label}
-                    </div>
-                  </motion.button>
-                );
-              })}
+              <h4 className="font-semibold text-sm text-gray-900">Minimum Rating</h4>
             </div>
-          </FilterSection>
-
-          {/* Minimum Fat */}
-          <FilterSection title="Minimum Fat">
-            <div className="space-y-4">
-              <Slider
-                value={[tempFilters.minFat || 0, 50]}
-                max={50}
-                step={0.5}
-                onValueChange={(v) => handleTempChange('minFat', v[0])}
-                className="w-full"
-              />
-              <div className="flex justify-between text-sm">
-                <div className="text-center">
-                  <div className="font-semibold text-gray-900">{tempFilters.minFat || 0}g</div>
-                  <div className="text-xs text-gray-500">Min</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-semibold text-gray-900">50g</div>
-                  <div className="text-xs text-gray-500">Max</div>
-                </div>
-              </div>
-            </div>
-          </FilterSection>
-
-          {/* Ratings */}
-          <FilterSection title="Minimum Rating" icon={Star}>
             <div className="space-y-2">
-              {[5, 4, 3, 2].map((rating) => (
-                <motion.div key={rating} whileHover={{ x: 4 }} className="flex items-center space-x-3">
+              {[5, 4, 3, 2].map(r => (
+                <div key={r} className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-all duration-200 group">
                   <Checkbox
-                    id={`rating-${rating}`}
-                    checked={tempFilters.minRating === rating}
+                    id={`rating-${r}`}
+                    checked={temp.minRating === r}
                     onCheckedChange={() =>
-                      handleTempChange('minRating', tempFilters.minRating === rating ? undefined : rating)
+                      update('minRating', temp.minRating === r ? '' : r)
                     }
-                    className="h-5 w-5 border-2 border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                    className="data-[state=checked]:bg-blue-600 border-gray-400 group-hover:border-blue-400"
                   />
-                  <Label htmlFor={`rating-${rating}`} className="text-sm text-gray-700 cursor-pointer flex items-center gap-2">
-                    <div className="flex items-center">
+                  <Label 
+                    htmlFor={`rating-${r}`} 
+                    className="flex items-center gap-3 cursor-pointer flex-1 group"
+                  >
+                    <div className="flex">
                       {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${i < rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`}
+                        <Star 
+                          key={i} 
+                          className={`w-4 h-4 ${
+                            i < r 
+                              ? 'text-amber-500 fill-amber-500' 
+                              : 'text-gray-300'
+                          }`}
+                          fill={i < r ? 'currentColor' : 'none'}
                         />
                       ))}
                     </div>
-                    <span className="text-gray-600 ml-1">& above</span>
+                    <span className="text-gray-600 text-sm font-medium group-hover:text-gray-900">
+                      & above
+                    </span>
                   </Label>
-                </motion.div>
+                </div>
               ))}
             </div>
-          </FilterSection>
+          </motion.div>
 
-          {/* Availability */}
-          <FilterSection title="Availability">
-            <div className="space-y-3">
-              <motion.div whileHover={{ x: 4 }} className="flex items-center space-x-3">
-                <Checkbox
-                  id="in-stock"
-                  checked={tempFilters.inStock === true}
-                  onCheckedChange={(v) => handleTempChange('inStock', v ? true : undefined)}
-                  className="h-5 w-5 border-2 border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+          {/* SHELF LIFE */}
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+            transition={{ delay: 0.2 }}
+            className="space-y-3"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-md bg-gradient-to-br from-purple-50 to-violet-50">
+                <Clock className="w-4 h-4 text-purple-600" />
+              </div>
+              <h4 className="font-semibold text-sm text-gray-900">Shelf Life (days)</h4>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="minShelfLife" className="text-xs text-gray-500 mb-1 block font-medium">Min</Label>
+                <Input
+                  id="minShelfLife"
+                  placeholder="0"
+                  value={temp.minShelfLife || ''}
+                  onChange={(e) => update('minShelfLife', e.target.value)}
+                  className="h-10 border-gray-300 focus:border-blue-500"
                 />
-                <Label htmlFor="in-stock" className="text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+              </div>
+              <div>
+                <Label htmlFor="maxShelfLife" className="text-xs text-gray-500 mb-1 block font-medium">Max</Label>
+                <Input
+                  id="maxShelfLife"
+                  placeholder="365"
+                  value={temp.maxShelfLife || ''}
+                  onChange={(e) => update('maxShelfLife', e.target.value)}
+                  className="h-10 border-gray-300 focus:border-blue-500"
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* NUTRITION */}
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+            transition={{ delay: 0.3 }}
+            className="space-y-4 p-3 bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-md bg-gradient-to-br from-rose-50 to-pink-50">
+                <Beef className="w-4 h-4 text-rose-600" />
+              </div>
+              <h4 className="font-semibold text-sm text-gray-900">Nutrition (per 100g)</h4>
+            </div>
+            
+            {/* FAT */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium text-gray-700 flex items-center gap-2">
+                  <Droplets className="w-3 h-3" />
+                  Fat (g)
+                </Label>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  placeholder="Min"
+                  value={temp.minFat || ''}
+                  onChange={(e) => update('minFat', e.target.value)}
+                  className="h-9 text-sm border-gray-300 focus:border-blue-500"
+                />
+                <Input
+                  placeholder="Max"
+                  value={temp.maxFat || ''}
+                  onChange={(e) => update('maxFat', e.target.value)}
+                  className="h-9 text-sm border-gray-300 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* PROTEIN */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium text-gray-700 flex items-center gap-2">
+                  <Package className="w-3 h-3" />
+                  Protein (g)
+                </Label>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  placeholder="Min"
+                  value={temp.minProtein || ''}
+                  onChange={(e) => update('minProtein', e.target.value)}
+                  className="h-9 text-sm border-gray-300 focus:border-blue-500"
+                />
+                <Input
+                  placeholder="Max"
+                  value={temp.maxProtein || ''}
+                  onChange={(e) => update('maxProtein', e.target.value)}
+                  className="h-9 text-sm border-gray-300 focus:border-blue-500"
+                />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* CATEGORIES */}
+          {categories.length > 0 && (
+            <motion.div 
+              initial="hidden"
+              animate="visible"
+              variants={fadeIn}
+              transition={{ delay: 0.4 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-md bg-gradient-to-br from-blue-50 to-cyan-50">
+                    <Package className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <h4 className="font-semibold text-sm text-gray-900">Categories</h4>
+                </div>
+                {filteredCategories.length > 0 && (
+                  <span className="text-xs text-gray-500 font-medium">{filteredCategories.length}</span>
+                )}
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                {filteredCategories.length > 0 ? (
+                  filteredCategories.map(c => (
+                    <div key={c} className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-all duration-200">
+                      <Checkbox
+                        id={`cat-${c}`}
+                        checked={temp.category?.includes(c)}
+                        onCheckedChange={() => toggleArray('category', c)}
+                        className="border-gray-400"
+                      />
+                      <Label 
+                        htmlFor={`cat-${c}`}
+                        className="capitalize cursor-pointer flex-1 text-sm hover:text-gray-900 transition-colors"
+                      >
+                        {c.replace('-', ' ')}
+                      </Label>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-3">
+                    <p className="text-sm text-gray-500 italic">No categories found</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* BRANDS */}
+          {brands.length > 0 && (
+            <motion.div 
+              initial="hidden"
+              animate="visible"
+              variants={fadeIn}
+              transition={{ delay: 0.5 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-md bg-gradient-to-br from-indigo-50 to-violet-50">
+                    <Sparkles className="w-4 h-4 text-indigo-600" />
+                  </div>
+                  <h4 className="font-semibold text-sm text-gray-900">Brands</h4>
+                </div>
+                {filteredBrands.length > 0 && (
+                  <span className="text-xs text-gray-500 font-medium">{filteredBrands.length}</span>
+                )}
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                {filteredBrands.length > 0 ? (
+                  filteredBrands.map(b => (
+                    <div key={b} className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-all duration-200">
+                      <Checkbox
+                        id={`brand-${b}`}
+                        checked={temp.brand?.includes(b)}
+                        onCheckedChange={() => toggleArray('brand', b)}
+                        className="border-gray-400"
+                      />
+                      <Label 
+                        htmlFor={`brand-${b}`}
+                        className="cursor-pointer flex-1 text-sm hover:text-gray-900 transition-colors"
+                      >
+                        {b}
+                      </Label>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-3">
+                    <p className="text-sm text-gray-500 italic">No brands found</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* AVAILABILITY */}
+          <motion.div 
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+            transition={{ delay: 0.6 }}
+            className="space-y-3"
+          >
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-md bg-gradient-to-br from-green-50 to-emerald-50">
+                <Truck className="w-4 h-4 text-green-600" />
+              </div>
+              <h4 className="font-semibold text-sm text-gray-900">Availability</h4>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-all duration-200">
+                <Checkbox
+                  id="inStock"
+                  checked={temp.inStock === true}
+                  onCheckedChange={(v) => update('inStock', v ? true : false)}
+                  className="border-gray-400"
+                />
+                <Label htmlFor="inStock" className="cursor-pointer flex-1 text-sm">
                   In Stock Only
                 </Label>
-              </motion.div>
-              <motion.div whileHover={{ x: 4 }} className="flex items-center space-x-3">
+              </div>
+              <div className="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition-all duration-200">
                 <Checkbox
-                  id="same-day"
-                  checked={tempFilters.sameDayDelivery === true}
-                  onCheckedChange={(v) => handleTempChange('sameDayDelivery', v ? true : undefined)}
-                  className="h-5 w-5 border-2 border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                  id="sameDayDelivery"
+                  checked={temp.sameDayDelivery === true}
+                  onCheckedChange={(v) => update('sameDayDelivery', v ? true : false)}
+                  className="border-gray-400"
                 />
-                <Label htmlFor="same-day" className="text-sm text-gray-700 cursor-pointer hover:text-gray-900">
+                <Label htmlFor="sameDayDelivery" className="cursor-pointer flex-1 text-sm">
                   Same Day Delivery
                 </Label>
-              </motion.div>
+              </div>
             </div>
-          </FilterSection>
+          </motion.div>
         </div>
       </ScrollArea>
 
-      {/* Apply Button */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="pt-4 border-t border-gray-200">
-        <Button
-          onClick={applyFilters}
-          className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/30 h-12 transform hover:scale-105 transition-all duration-300"
+      {/* ACTIONS */}
+      <div className="pt-6 border-t mt-6 space-y-3">
+        <Button 
+          onClick={applyFilters} 
+          className="w-full h-11 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-md hover:shadow-lg transition-all duration-300"
         >
-          <Sparkles className="h-4 w-4 mr-2" />
           Apply Filters
-          <ChevronRight className="h-4 w-4 ml-2" />
+          <Filter className="ml-2 w-4 h-4" />
         </Button>
-        <p className="text-xs text-gray-500 text-center mt-2">
-          {activeFilterCount > 0
-            ? `${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} will be applied`
-            : 'Select filters to refine results'}
-        </p>
-      </motion.div>
+        <Button 
+          onClick={onReset} 
+          variant="outline" 
+          className="w-full h-11 border-gray-300 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900 transition-all duration-300"
+        >
+          Reset All
+          <X className="ml-2 w-4 h-4" />
+        </Button>
+      </div>
     </div>
   );
 };

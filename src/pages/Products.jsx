@@ -1,182 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Filter, Grid3x3, List, Search, Star, ShoppingCart, ChevronRight, X, Sparkles, Clock } from 'lucide-react';
+import { Search, Filter, ChevronRight, ShoppingCart, Star, X, Loader2, Sparkles, ArrowRight, Clock, Award, Heart, Truck, Shield, Coffee, Droplets, Leaf, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import ProductGrid from '@/components/products/ProductGrid';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/contexts/CartContext';
 import { apiService } from '@/services/api';
 import ProductFilters from '../components/products/ProductFilters';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useInView } from 'framer-motion';
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const didInit = useRef(false);
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('grid');
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
     total: 0,
     pages: 1
   });
+
+  const [filters, setFilters] = useState({
+    category: [],
+    brand: [],
+    color: [],
+    minPrice: '',
+    maxPrice: '',
+    minRating: '',
+    minFat: '',
+    maxFat: '',
+    inStock: false,
+    sameDayDelivery: false,
+    search: '',
+    sort: 'newest'
+  });
+
+  const [searchQuery, setSearchQuery] = useState('');
   
-  const initialFilters = {
-    category: searchParams.get('category')?.split(',') || [],
-    brand: searchParams.get('brand')?.split(',') || [],
-    minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
-    maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
-    minRating: searchParams.get('minRating') ? Number(searchParams.get('minRating')) : undefined,
-    minFat: searchParams.get('minFat') ? Number(searchParams.get('minFat')) : undefined,
-    maxFat: searchParams.get('maxFat') ? Number(searchParams.get('maxFat')) : undefined,
-    color: searchParams.get('color')?.split(',') || [],
-    inStock: searchParams.get('inStock') === 'true' ? true : undefined,
-    sameDayDelivery: searchParams.get('sameDayDelivery') === 'true' ? true : undefined,
-    search: searchParams.get('search') || undefined,
-    sort: searchParams.get('sort') || 'newest',
-  };
-
-  const [filters, setFilters] = useState(initialFilters);
-
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  useEffect(() => {
-    fetchProducts();
-  }, [filters, pagination.page]);
-
-  const fetchInitialData = async () => {
-    try {
-      const [categoriesRes, brandsRes] = await Promise.all([
-        apiService.getCategories(),
-        apiService.getBrands()
-      ]);
-
-      if (categoriesRes.success) setCategories(categoriesRes.data.categories || []);
-      if (brandsRes.success) setBrands(brandsRes.data.brands || []);
-    } catch (error) {
-      console.error('Error fetching initial data:', error);
-    }
-  };
-
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      
-      const cleanFilters = {};
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== '') {
-          if (Array.isArray(value) && value.length > 0) {
-            cleanFilters[key] = value;
-          } else if (!Array.isArray(value)) {
-            cleanFilters[key] = value;
-          }
-        }
-      });
-
-      const queryParams = {
-        page: pagination.page,
-        limit: pagination.limit,
-        ...cleanFilters
-      };
-
-      if (queryParams.category && Array.isArray(queryParams.category)) {
-        queryParams.category = queryParams.category.join(',');
-      }
-      if (queryParams.brand && Array.isArray(queryParams.brand)) {
-        queryParams.brand = queryParams.brand.join(',');
-      }
-      if (queryParams.color && Array.isArray(queryParams.color)) {
-        queryParams.color = queryParams.color.join(',');
-      }
-
-      const response = await apiService.getProducts(queryParams);
-      
-      if (response.success) {
-        setProducts(response.data.products || []);
-        setPagination(response.data.pagination || {
-          page: 1,
-          limit: 12,
-          total: 0,
-          pages: 1
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== '' && value !== null) {
-        if (Array.isArray(value) && value.length > 0) {
-          params.set(key, value.join(','));
-        } else if (!Array.isArray(value)) {
-          params.set(key, value.toString());
-        }
-      }
-    });
-    
-    setSearchParams(params);
-  }, [filters, setSearchParams]);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setFilters(prev => ({ ...prev, search: searchQuery || undefined }));
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-
-  const handleFilterChange = (newFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-
-  const handleResetFilters = () => {
-    setFilters({
-      category: [],
-      brand: [],
-      color: [],
-      minPrice: undefined,
-      maxPrice: undefined,
-      minRating: undefined,
-      minFat: undefined,
-      maxFat: undefined,
-      inStock: undefined,
-      sameDayDelivery: undefined,
-      search: undefined,
-      sort: 'newest',
-    });
-    setSearchQuery('');
-    setPagination(prev => ({ ...prev, page: 1 }));
-  };
-
-  const handleSortChange = (value) => {
-    setFilters(prev => ({ ...prev, sort: value }));
-  };
-
-  const handleLoadMore = () => {
-    if (pagination.page < pagination.pages) {
-      setPagination(prev => ({ ...prev, page: prev.page + 1 }));
-    }
-  };
-
-  const activeFilterCount = Object.keys(filters).filter(
-    key => filters[key] !== undefined && 
-           filters[key] !== '' && 
-           !(Array.isArray(filters[key]) && filters[key].length === 0)
-  ).length;
+  const heroRef = useRef(null);
+  const statsRef = useRef(null);
+  const isHeroInView = useInView(heroRef, { once: true });
+  const isStatsInView = useInView(statsRef, { once: true });
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
@@ -193,23 +66,143 @@ const Products = () => {
     }
   };
 
-  if (loading && products.length === 0) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="container mx-auto px-4 py-20">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Discovering premium dairy...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  /* ------------------ INITIAL LOAD ------------------ */
+  useEffect(() => {
+    const loadInitial = async () => {
+      setLoading(true);
+      try {
+        const [catRes, brandRes] = await Promise.all([
+          apiService.getCategories(),
+          apiService.getBrands()
+        ]);
+        if (catRes.success) setCategories(catRes.data.categories || []);
+        if (brandRes.success) setBrands(brandRes.data.brands || []);
+      } catch (error) {
+        console.error('Failed to load initial data:', error);
+      }
+    };
+    loadInitial();
+  }, []);
+
+  /* ------------------ FETCH PRODUCTS ------------------ */
+  useEffect(() => {
+    fetchProducts();
+  }, [filters, pagination.page]);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+
+    const cleanFilters = {};
+    Object.entries(filters).forEach(([k, v]) => {
+      if (
+        v !== '' &&
+        v !== undefined &&
+        !(Array.isArray(v) && v.length === 0)
+      ) {
+        cleanFilters[k] = v;
+      }
+    });
+
+    try {
+      const res = await apiService.getProducts({
+        ...cleanFilters,
+        page: pagination.page,
+        limit: pagination.limit
+      });
+
+      if (res.success) {
+        setProducts(res.data.products || []);
+        setPagination(res.data.pagination);
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ------------------ URL SYNC ------------------ */
+  useEffect(() => {
+    if (!didInit.current) {
+      didInit.current = true;
+      return;
+    }
+
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v && !(Array.isArray(v) && v.length === 0)) {
+        params.set(k, Array.isArray(v) ? v.join(',') : v);
+      }
+    });
+    params.set('page', pagination.page);
+    setSearchParams(params, { replace: true });
+  }, [filters, pagination.page]);
+
+  /* ------------------ HANDLERS ------------------ */
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setPagination(p => ({ ...p, page: 1 }));
+    setFilters(prev => ({ ...prev, search: searchQuery }));
+  };
+
+  const handleFilterApply = (newFilters) => {
+    setPagination(p => ({ ...p, page: 1 }));
+    setFilters(newFilters);
+    setIsFilterOpen(false);
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setPagination(p => ({ ...p, page: 1 }));
+    setFilters({
+      category: [],
+      brand: [],
+      color: [],
+      minPrice: '',
+      maxPrice: '',
+      minRating: '',
+      minFat: '',
+      maxFat: '',
+      inStock: false,
+      sameDayDelivery: false,
+      search: '',
+      sort: 'newest'
+    });
+    setSearchParams({}, { replace: true });
+  };
+
+  const handleSortChange = (value) => {
+    setFilters(prev => ({ ...prev, sort: value }));
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setFilters(prev => ({ ...prev, search: '' }));
+  };
+
+  // Count active filters
+  const activeFilterCount = Object.entries(filters).reduce((count, [key, value]) => {
+    if (key === 'search' && value) return count + 1;
+    if (Array.isArray(value) && value.length > 0) return count + 1;
+    if (typeof value === 'string' && value && key !== 'sort') return count + 1;
+    if (typeof value === 'boolean' && value) return count + 1;
+    return count;
+  }, 0);
+
+  // Stats data
+  const stats = [
+    { number: '1000+', label: 'Fresh Products', icon: <Leaf className="h-5 w-5" />, color: 'from-emerald-500 to-green-500' },
+    { number: '50+', label: 'Local Farms', icon: <Users className="h-5 w-5" />, color: 'from-amber-500 to-orange-500' },
+    { number: '24/7', label: 'Delivery Support', icon: <Truck className="h-5 w-5" />, color: 'from-blue-500 to-cyan-500' },
+    { number: '4.9★', label: 'Customer Rating', icon: <Star className="h-5 w-5" />, color: 'from-purple-500 to-violet-500' },
+  ];
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Cinematic Hero Section */}
-      <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden"
+    <div className="min-h-screen bg-gray-50">
+      {/* CINEMATIC HERO SECTION */}
+      <section 
+        ref={heroRef}
+        className="relative min-h-[85vh] flex items-center justify-center overflow-hidden"
         style={{
           backgroundImage: `
             linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.7)),
@@ -217,6 +210,7 @@ const Products = () => {
           `,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          backgroundAttachment: 'fixed'
         }}
       >
         {/* Animated Particles */}
@@ -242,10 +236,10 @@ const Products = () => {
           ))}
         </div>
 
-        <div className="container relative mx-auto px-4 py-12">
+        <div className="container relative mx-auto px-4 py-1">
           <motion.div
             initial="hidden"
-            animate="visible"
+            animate={isHeroInView ? "visible" : "hidden"}
             variants={staggerContainer}
             className="max-w-5xl mx-auto text-center"
           >
@@ -253,211 +247,271 @@ const Products = () => {
 
             <motion.div variants={fadeInUp} className="space-y-8">
               <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-none">
-               
+                <span className="block text-white">
+                  Pure Dairy
+                </span>
                 <span className="block bg-gradient-to-r from-cyan-400 via-white to-blue-400 bg-clip-text text-transparent mt-4">
-                  Dairy Selection
+                  Perfectly Curated
                 </span>
               </h1>
               
-              <p className="text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto font-light">
-                Handpicked dairy products from trusted farms. Experience purity in every drop.
-              </p>
             </motion.div>
-
-            {/* Centered Search Bar */}
-            <motion.form 
-              variants={fadeInUp}
-              onSubmit={handleSearch} 
-              className="relative max-w-2xl mx-auto mt-12"
-            >
-              <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-400" />
-              <Input
-                placeholder="Search for milk, cheese, yogurt, butter, ice cream..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-14 h-16 text-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-gray-400 focus:border-cyan-500 focus:ring-cyan-500/20 rounded-full"
-              />
-              <Button 
-                type="submit" 
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white border-0 rounded-full px-8"
-              >
-                Search
-              </Button>
-            </motion.form>
 
             <motion.div 
               variants={fadeInUp}
-              className="mt-8 flex items-center justify-center gap-4 text-gray-300"
+              className="mt-12"
             >
-              <Clock className="h-4 w-4" />
-              <span>Same-day delivery available</span>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 pb-20 -mt-8 relative z-10">
-        {/* Filters and Controls */}
-        <motion.div 
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-200"
-        >
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex items-center gap-3">
-              <span className="text-gray-600">
-                {pagination.total} premium products
-              </span>
-              {activeFilterCount > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-3 py-1.5 rounded-full font-medium">
-                    {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''}
-                  </span>
+              <form onSubmit={handleSearch} className="relative w-full max-w-2xl mx-auto">
+                <div className="flex gap-2 bg-white/10 backdrop-blur-lg rounded-2xl p-2 shadow-2xl border border-white/20">
+                  <div className="flex-1 flex items-center">
+                    <Search className="ml-4 w-5 h-5 text-gray-300" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search milk, cheese, yogurt, butter, paneer..."
+                      className="border-0 bg-transparent focus-visible:ring-0 text-white placeholder:text-gray-300 h-14 pl-3 text-lg"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={clearSearch}
+                        className="p-2 hover:bg-white/10 rounded-full mr-2 transition-colors"
+                      >
+                        <X className="w-5 h-5 text-gray-300" />
+                      </button>
+                    )}
+                  </div>
                   <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleResetFilters}
-                    className="h-7 px-2 text-gray-500 hover:text-gray-700"
+                    type="submit" 
+                    className="rounded-xl px-8 h-14 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-lg"
                   >
-                    <X className="h-3 w-3 mr-1" />
-                    Clear
+                    <Search className="mr-2 h-5 w-5" />
+                    Search
                   </Button>
                 </div>
+              </form>
+            </motion.div>
+
+          </motion.div>
+        </div>
+
+      </section>
+
+
+      {/* CONTENT */}
+      <div className="container mx-auto px-4 py-12">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* MOBILE FILTER TOGGLE */}
+          <div className="lg:hidden flex items-center justify-between gap-4">
+            <Button
+              onClick={() => setIsFilterOpen(true)}
+              variant="outline"
+              className="flex items-center gap-2 border-gray-300 hover:bg-gray-50"
+            >
+              <Filter className="w-4 h-4" />
+              Filters
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="ml-1">
+                  {activeFilterCount}
+                </Badge>
               )}
-            </div>
+            </Button>
+            
+            <Select value={filters.sort} onValueChange={handleSortChange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest</SelectItem>
+                <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                <SelectItem value="rating">Top Rated</SelectItem>
+                <SelectItem value="popular">Most Popular</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="flex items-center gap-4">
-              {/* View Mode Toggle */}
-              <div className="hidden md:flex items-center gap-1 border border-gray-200 rounded-lg p-1">
-                <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                  size="icon"
-                  onClick={() => setViewMode('grid')}
-                  className={`h-9 w-9 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600'}`}
-                >
-                  <Grid3x3 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="icon"
-                  onClick={() => setViewMode('list')}
-                  className={`h-9 w-9 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600'}`}
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {/* Sort Dropdown */}
-              <Select value={filters.sort} onValueChange={handleSortChange}>
-                <SelectTrigger className="w-[200px] border-2 border-gray-200 rounded-xl h-12">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest Arrivals</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="rating">Highest Rated</SelectItem>
-                  <SelectItem value="featured">Featured First</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Mobile Filters Button */}
-              <Sheet open={showMobileFilters} onOpenChange={setShowMobileFilters}>
-                <SheetTrigger asChild>
-                  <Button variant="outline" className="md:hidden border-2 border-gray-200 h-12 rounded-xl">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filters
-                    {activeFilterCount > 0 && (
-                      <span className="ml-2 bg-blue-600 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="w-full sm:w-[400px] p-0">
-                  <SheetHeader className="border-b border-gray-200 p-6">
-                    <SheetTitle className="text-xl">Filter Products</SheetTitle>
-                  </SheetHeader>
-                  <ScrollArea className="h-[calc(100vh-120px)]">
+          {/* FILTERS SIDEBAR */}
+          <AnimatePresence>
+            {isFilterOpen && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="fixed inset-0 z-50 lg:hidden"
+              >
+                <div 
+                  className="absolute inset-0 bg-black/50"
+                  onClick={() => setIsFilterOpen(false)}
+                />
+                <div className="absolute inset-y-0 left-0 w-[85%] max-w-sm bg-white overflow-y-auto">
+                  <div className="sticky top-0 bg-white border-b z-10">
+                    <div className="flex items-center justify-between p-4">
+                      <h2 className="text-xl font-semibold">Filters</h2>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsFilterOpen(false)}
+                      >
+                        <X className="w-5 h-5" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="p-4">
                     <ProductFilters
                       categories={categories}
                       brands={brands}
                       filters={filters}
-                      onFilterChange={handleFilterChange}
+                      onApply={handleFilterApply}
                       onReset={handleResetFilters}
                     />
-                  </ScrollArea>
-                </SheetContent>
-              </Sheet>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* DESKTOP FILTERS */}
+          <div className="hidden lg:block w-1/4">
+            <div className="sticky top-24">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Filters</h2>
+                {activeFilterCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleResetFilters}
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    Clear all
+                  </Button>
+                )}
+              </div>
+              <ProductFilters
+                categories={categories}
+                brands={brands}
+                filters={filters}
+                onApply={handleFilterApply}
+                onReset={handleResetFilters}
+              />
             </div>
           </div>
-        </motion.div>
 
-        {/* Main Layout */}
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Desktop Filters Sidebar */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="hidden lg:block lg:w-1/4"
-          >
-            <div className="sticky top-24">
-              <div className="border border-gray-200 rounded-2xl p-6 bg-white shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleResetFilters}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <X className="h-4 w-4 mr-1" />
-                    Clear All
-                  </Button>
+          {/* PRODUCTS GRID */}
+          <div className="w-full lg:w-3/4">
+            {/* HEADER */}
+            <div className="hidden lg:flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Fresh Dairy Collection
+                </h2>
+                <p className="text-gray-600 mt-1">
+                  Showing {products.length} of {pagination.total} products
+                  {filters.search && (
+                    <span className="ml-2">
+                      for "<span className="font-medium">{filters.search}</span>"
+                    </span>
+                  )}
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Sort by:</span>
+                  <Select value={filters.sort} onValueChange={handleSortChange}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">Newest</SelectItem>
+                      <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                      <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                      <SelectItem value="rating">Top Rated</SelectItem>
+                      <SelectItem value="popular">Most Popular</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <ProductFilters
-                  categories={categories}
-                  brands={brands}
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
-                  onReset={handleResetFilters}
-                />
               </div>
             </div>
-          </motion.div>
 
-          {/* Products Area */}
-          <div className="lg:w-3/4">
+            {/* ACTIVE FILTERS BADGES */}
+            {activeFilterCount > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 flex flex-wrap gap-2"
+              >
+                {filters.search && (
+                  <Badge variant="secondary" className="gap-2">
+                    Search: {filters.search}
+                    <button onClick={() => setFilters(prev => ({ ...prev, search: '' }))}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                {filters.category?.map(cat => (
+                  <Badge key={cat} variant="secondary" className="gap-2">
+                    {cat}
+                    <button onClick={() => setFilters(prev => ({
+                      ...prev,
+                      category: prev.category.filter(c => c !== cat)
+                    }))}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                ))}
+                {filters.minPrice && (
+                  <Badge variant="secondary" className="gap-2">
+                    Min: ₹{filters.minPrice}
+                    <button onClick={() => setFilters(prev => ({ ...prev, minPrice: '' }))}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </Badge>
+                )}
+                {activeFilterCount > 3 && (
+                  <Badge variant="outline">
+                    +{activeFilterCount - 3} more
+                  </Badge>
+                )}
+              </motion.div>
+            )}
+
+            {/* PRODUCTS */}
             <AnimatePresence mode="wait">
-              {!loading && products.length === 0 ? (
+              {loading && pagination.page === 1 ? (
                 <motion.div
-                  key="empty"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="text-center py-20"
+                  className="flex justify-center items-center py-20"
                 >
-                  <div className="w-32 h-32 mx-auto mb-8 rounded-full bg-gray-100 flex items-center justify-center">
-                    <Search className="h-16 w-16 text-gray-400" />
-                  </div>
-                  <h3 className="text-2xl font-semibold mb-3 text-gray-900">No products found</h3>
-                  <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                    We couldn't find dairy products matching your criteria. Try adjusting your filters.
-                  </p>
-                  <Button 
-                    onClick={handleResetFilters}
-                    className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white h-12 px-8"
-                  >
-                    Clear All Filters
-                  </Button>
+                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                 </motion.div>
-              ) : viewMode === 'grid' ? (
+              ) : products.length === 0 ? (
                 <motion.div
-                  key="grid"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="text-center py-20 bg-white rounded-xl border"
+                >
+                  <div className="max-w-md mx-auto">
+                    <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      No products found
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Try adjusting your search or filter criteria
+                    </p>
+                    <Button
+                      onClick={handleResetFilters}
+                      variant="outline"
+                    >
+                      Clear all filters
+                    </Button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -466,137 +520,118 @@ const Products = () => {
                     products={products}
                     loading={loading}
                     hasMore={pagination.page < pagination.pages}
-                    onLoadMore={handleLoadMore}
+                    onLoadMore={() =>
+                      setPagination(p => ({ ...p, page: p.page + 1 }))
+                    }
                   />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="list"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <ProductListView products={products} />
+                  
+                  {/* PAGINATION */}
+                  {pagination.pages > 1 && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-10 flex items-center justify-center gap-2"
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}
+                        disabled={pagination.page === 1}
+                      >
+                        Previous
+                      </Button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+                          const pageNum = i + 1;
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={pagination.page === pageNum ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setPagination(p => ({ ...p, page: pageNum }))}
+                              className="w-10"
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                        {pagination.pages > 5 && (
+                          <>
+                            <span className="px-2">...</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setPagination(p => ({ ...p, page: pagination.pages }))}
+                            >
+                              {pagination.pages}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPagination(p => ({ ...p, page: p.page + 1 }))}
+                        disabled={pagination.page >= pagination.pages}
+                      >
+                        Next
+                      </Button>
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
 
-const ProductListView = ({ products }) => {
-  const { addToCart } = useCart();
+      {/* CTA SECTION */}
+      <section className="relative py-20 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50">
+        <div className="absolute inset-0">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-emerald-500/10 to-green-500/10 rounded-full blur-3xl"></div>
+        </div>
 
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-4"
-    >
-      {products.map((product, index) => (
-        <motion.div
-          key={product._id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.05 }}
-          className="bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-xl transition-all duration-300 group"
-        >
-          <div className="flex items-center gap-8">
-            {/* Product Image */}
-            <div className="w-32 h-32 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 relative">
-              {product.images?.[0]?.url ? (
-                <img
-                  src={product.images[0].url}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-4xl">🥛</span>
-                </div>
-              )}
-              {product.color && (
-                <div className="absolute bottom-3 right-3 w-6 h-6 rounded-full border-2 border-white shadow-sm" 
-                     style={{ backgroundColor: product.color }} />
-              )}
-            </div>
+        <div className="container relative mx-auto px-4 text-center">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+          >
+            <motion.h2 
+              variants={fadeInUp}
+              className="text-4xl md:text-5xl font-bold mb-6 text-gray-900"
+            >
+              Can't Find What You Need?
+            </motion.h2>
             
-            {/* Product Info */}
-            <div className="flex-1">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                      {product.name}
-                    </h3>
-                    {product.brand && (
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                        {product.brand}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-gray-600 text-sm line-clamp-2">
-                    {product.description}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-blue-600">₹{product.price}</p>
-                  <p className="text-xs text-gray-500">per {product.unit}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-6 text-sm">
-                {product.rating?.average && (
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 text-amber-500 fill-current mr-1" />
-                    <span className="font-medium">{product.rating.average.toFixed(1)}</span>
-                    <span className="text-gray-500 ml-1">({product.rating.count || 0})</span>
-                  </div>
-                )}
-                {product.nutritionalFacts?.fatContent && (
-                  <div className="text-gray-600">
-                    <span className="font-medium">{product.nutritionalFacts.fatContent}g</span> fat
-                  </div>
-                )}
-                <div className="text-gray-600">
-                  Shelf: <span className="font-medium">{product.shelfLife} days</span>
-                </div>
-                <div className={`font-medium ${product.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {product.quantity > 0 ? 'In Stock' : 'Out of Stock'}
-                </div>
-              </div>
-            </div>
+            <motion.p 
+              variants={fadeInUp}
+              className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto"
+            >
+              We source special dairy products on request. Tell us what you're looking for!
+            </motion.p>
             
-            {/* Actions */}
-            <div className="flex flex-col gap-3">
-              <Button
-                size="lg"
-                onClick={() => addToCart(product)}
-                disabled={!product.isAvailable || product.quantity === 0}
-                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white border-0"
-              >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Add to Cart
-              </Button>
+            <motion.div variants={fadeInUp}>
               <Button 
-                variant="outline" 
                 size="lg" 
                 asChild
-                className="border-2 border-gray-200 hover:border-blue-600 hover:bg-blue-50 h-11"
+                className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 shadow-lg shadow-blue-500/30"
               >
-                <Link to={`/product/${product._id}`} className="flex items-center justify-center">
-                  View Details
-                  <ChevronRight className="h-4 w-4 ml-1" />
+                <Link to="/contact">
+                  <Coffee className="mr-2 h-5 w-5" />
+                  Request Special Product
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
-            </div>
-          </div>
-        </motion.div> 
-      ))}
-    </motion.div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+    </div>
   );
 };
 

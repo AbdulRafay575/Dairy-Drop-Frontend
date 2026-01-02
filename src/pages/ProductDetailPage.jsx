@@ -32,21 +32,27 @@ import {
   Eye,
   X,
   MessageSquare,
-  Mail
+  Mail,
+  Send,
+  AlertCircle,
+  XCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import ProductGrid from '@/components/products/ProductGrid';
 import { apiService } from '@/services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
@@ -56,6 +62,15 @@ const ProductDetailPage = () => {
   const [activeTab, setActiveTab] = useState('description');
   const [selectedSize, setSelectedSize] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [userOrders, setUserOrders] = useState([]);
+  const [eligibleOrder, setEligibleOrder] = useState(null);
+  const [reviewData, setReviewData] = useState({
+    rating: 0,
+    title: '',
+    comment: ''
+  });
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const { addToCart, addToWishlist, isInWishlist, removeFromWishlist } = useCart();
   const { toast } = useToast();
@@ -64,6 +79,12 @@ const ProductDetailPage = () => {
   useEffect(() => {
     fetchProductDetails();
   }, [id]);
+
+  useEffect(() => {
+    if (product && user) {
+      checkEligibleOrder();
+    }
+  }, [product, user]);
 
   const fetchProductDetails = async () => {
     try {
@@ -106,6 +127,28 @@ const ProductDetailPage = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkEligibleOrder = async () => {
+    try {
+      const ordersResponse = await apiService.getOrders();
+      if (ordersResponse.success) {
+        setUserOrders(ordersResponse.data.orders);
+        
+        // Find an order that contains this product and is delivered
+        const deliveredOrders = ordersResponse.data.orders.filter(
+          order => order.orderStatus === 'delivered'
+        );
+        
+        const eligible = deliveredOrders.find(order => 
+          order.items.some(item => item.product?._id === id || item.product === id)
+        );
+        
+        setEligibleOrder(eligible);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
     }
   };
 
@@ -172,6 +215,78 @@ const ProductDetailPage = () => {
       setQuantity(prev => Math.min(prev + 1, product.quantity));
     } else {
       setQuantity(prev => Math.max(prev - 1, 1));
+    }
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!reviewData.rating) {
+      toast({
+        title: 'Rating Required',
+        description: 'Please select a rating',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!reviewData.comment.trim()) {
+      toast({
+        title: 'Comment Required',
+        description: 'Please write your review',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      setSubmittingReview(true);
+      
+      if (!eligibleOrder) {
+        toast({
+          title: 'Order Required',
+          description: 'You need to have purchased and received this product first',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      const response = await apiService.createReview({
+        product: id,
+        order: eligibleOrder._id,
+        rating: reviewData.rating,
+        title: reviewData.title.trim(),
+        comment: reviewData.comment.trim()
+      });
+      
+      if (response.success) {
+        toast({
+          title: 'Review Submitted',
+          description: 'Thank you for your feedback!',
+        });
+        
+        // Reset form
+        setReviewData({
+          rating: 0,
+          title: '',
+          comment: ''
+        });
+        setShowReviewForm(false);
+        
+        // Refresh reviews
+        fetchProductDetails();
+      } else {
+        throw new Error(response.message || 'Failed to submit review');
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to submit review',
+        variant: 'destructive'
+      });
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -264,7 +379,7 @@ const ProductDetailPage = () => {
               >
                 {product.images?.[activeImage]?.url ? (
                   <img
-                    src={product.images[activeImage].url}
+                src={`http://localhost:5000${product.images[0].url}`}
                     alt={product.images[activeImage].alt || product.name}
                     className="w-full h-[500px] object-cover hover:scale-105 transition-transform duration-700"
                   />
@@ -593,12 +708,159 @@ const ProductDetailPage = () => {
                         <span className="text-gray-600">({product.rating?.count || 0} reviews)</span>
                       </div>
                     </div>
-                    <Button className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600">
+                    <Button 
+                      className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                      onClick={() => {
+                        if (!user) {
+                          toast({
+                            title: 'Login Required',
+                            description: 'Please login to write a review',
+                            variant: 'destructive'
+                          });
+                          return;
+                        }
+                        
+                        if (!eligibleOrder) {
+                          toast({
+                            title: 'Order Required',
+                            description: 'You need to purchase and receive this product first',
+                            variant: 'destructive'
+                          });
+                          return;
+                        }
+                        
+                        setShowReviewForm(true);
+                      }}
+                    >
                       <MessageSquare className="h-4 w-4 mr-2" />
                       Write a Review
                     </Button>
                   </div>
                 </div>
+
+                {/* Review Form */}
+                {showReviewForm && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="border-2 border-blue-200 rounded-2xl p-6 bg-gradient-to-br from-white to-blue-50"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-xl font-semibold text-gray-900">Write Your Review</h4>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowReviewForm(false)}
+                        className="hover:bg-blue-100"
+                      >
+                        <X className="h-5 w-5" />
+                      </Button>
+                    </div>
+                    <form onSubmit={handleReviewSubmit} className="space-y-4">
+                      {/* Rating */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                          Rating *
+                        </label>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setReviewData(prev => ({ ...prev, rating: star }))}
+                              className="p-1 hover:scale-110 transition-transform"
+                            >
+                              <Star
+                                className={`h-10 w-10 transition-colors ${
+                                  star <= reviewData.rating
+                                    ? 'fill-amber-400 text-amber-400'
+                                    : 'fill-gray-200 text-gray-200'
+                                }`}
+                              />
+                            </button>
+                          ))}
+                          <span className="ml-4 text-lg font-bold text-gray-900 self-center">
+                            {reviewData.rating}.0
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Title */}
+                      <div>
+                        <label htmlFor="reviewTitle" className="block text-sm font-medium text-gray-900 mb-2">
+                          Title (Optional)
+                        </label>
+                        <Input
+                          id="reviewTitle"
+                          value={reviewData.title}
+                          onChange={(e) => setReviewData(prev => ({ ...prev, title: e.target.value }))}
+                          placeholder="Summarize your experience"
+                          maxLength={100}
+                        />
+                      </div>
+                      
+                      {/* Comment */}
+                      <div>
+                        <label htmlFor="reviewComment" className="block text-sm font-medium text-gray-900 mb-2">
+                          Your Review *
+                        </label>
+                        <Textarea
+                          id="reviewComment"
+                          value={reviewData.comment}
+                          onChange={(e) => setReviewData(prev => ({ ...prev, comment: e.target.value }))}
+                          placeholder="Share your experience with this product..."
+                          rows={4}
+                          maxLength={500}
+                          required
+                        />
+                        <div className="text-right mt-1 text-sm text-gray-500">
+                          {reviewData.comment.length}/500 characters
+                        </div>
+                      </div>
+                      
+                      {/* Order Info */}
+                      {eligibleOrder && (
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+                          <div className="flex items-center gap-2 text-sm text-green-800">
+                            <CheckCircle className="h-4 w-4" />
+                            <span>Reviewing based on your order #{eligibleOrder.orderNumber}</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Buttons */}
+                      <div className="flex justify-end gap-3 pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowReviewForm(false)}
+                          disabled={submittingReview}
+                          className="border-2 border-gray-200 hover:border-gray-300"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={submittingReview || !eligibleOrder}
+                          className="bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+                        >
+                          {submittingReview ? (
+                            <>
+                              <span className="animate-spin mr-2">⏳</span>
+                              Submitting...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="h-4 w-4 mr-2" />
+                              Submit Review
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </form>
+                  </motion.div>
+                )}
 
                 {/* Reviews List */}
                 <div className="space-y-6">
@@ -609,7 +871,38 @@ const ProductDetailPage = () => {
                       <p className="text-gray-600 max-w-md mx-auto mb-6">
                         Be the first to share your experience with this premium dairy product.
                       </p>
-                      <Button variant="outline" className="border-2 border-gray-200">
+                      {user && !eligibleOrder && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 max-w-md mx-auto mb-4">
+                          <div className="flex items-start gap-3">
+                            <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                            <div className="text-sm text-amber-800">
+                              <p className="font-medium mb-1">Order Required</p>
+                              <p>Purchase and receive this product to write a review.</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        className="border-2 border-gray-200"
+                        onClick={() => {
+                          if (!user) {
+                            toast({
+                              title: 'Login Required',
+                              description: 'Please login to write a review',
+                              variant: 'destructive'
+                            });
+                          } else if (!eligibleOrder) {
+                            toast({
+                              title: 'Order Required',
+                              description: 'You need to purchase and receive this product first',
+                              variant: 'destructive'
+                            });
+                          } else {
+                            setShowReviewForm(true);
+                          }
+                        }}
+                      >
                         <Mail className="h-4 w-4 mr-2" />
                         Share Feedback
                       </Button>
