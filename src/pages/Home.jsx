@@ -266,19 +266,7 @@ const Home = () => {
                   {/* Overlay Gradient */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                   
-                  {/* Floating Badges */}
-                  <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg">
-                    <span className="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                      <Award className="h-4 w-4 text-amber-500" />
-                      Award Winning Quality
-                    </span>
-                  </div>
-                  <div className="absolute bottom-6 right-6 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-full px-4 py-2 shadow-lg">
-                    <span className="flex items-center gap-2 text-sm font-semibold text-white">
-                      <Clock className="h-4 w-4" />
-                      Same Day Delivery
-                    </span>
-                  </div>
+                  
                 </div>
               </div>
             </motion.div>

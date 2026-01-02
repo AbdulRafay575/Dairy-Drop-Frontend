@@ -17,7 +17,9 @@ import {
   CheckCircle,
   Clock,
   Plus,
-  Trash2
+  Trash2,
+  Home,
+  Briefcase
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,7 +51,7 @@ const Profile = () => {
     state: '',
     zipCode: '',
     country: 'India',
-    isDefault: false
+    isDefault: true
   });
   const [editingAddress, setEditingAddress] = useState(null);
 
@@ -107,12 +109,23 @@ const Profile = () => {
   const handleAddAddress = async () => {
     try {
       setLoading(true);
+      
+      // Check if user already has an address
+      if (user.addresses && user.addresses.length > 0) {
+        toast({
+          title: 'Address Limit Reached',
+          description: 'You can only have one delivery address. Please edit your existing address.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
       const result = await addAddress(addressForm);
       
       if (result.success) {
         toast({
           title: 'Address Added',
-          description: 'New address has been added successfully',
+          description: 'Delivery address has been saved successfully',
         });
         setAddressForm({
           type: 'home',
@@ -121,7 +134,7 @@ const Profile = () => {
           state: '',
           zipCode: '',
           country: 'India',
-          isDefault: false
+          isDefault: true
         });
       } else {
         toast({
@@ -159,7 +172,7 @@ const Profile = () => {
           state: '',
           zipCode: '',
           country: 'India',
-          isDefault: false
+          isDefault: true
         });
       } else {
         toast({
@@ -180,7 +193,7 @@ const Profile = () => {
   };
 
   const handleDeleteAddress = async (addressId) => {
-    if (!confirm('Are you sure you want to delete this address?')) return;
+    if (!confirm('Are you sure you want to delete your delivery address?')) return;
 
     try {
       const result = await deleteAddress(addressId);
@@ -242,6 +255,8 @@ const Profile = () => {
     );
   }
 
+  const hasAddress = user.addresses && user.addresses.length > 0;
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -272,139 +287,140 @@ const Profile = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="profile">
-              <User className="h-4 w-6 mr-2" />
-              Profile
-            </TabsTrigger>
-            <TabsTrigger value="addresses">
-              <MapPin className="h-4 w-6 mr-2" />
-              Addresses
-            </TabsTrigger>
-            <TabsTrigger value="orders">
-              <ShoppingBag className="h-4 w-6 mr-2" />
-              Orders
-            </TabsTrigger>
-          </TabsList>
+        {/* Full-width Tabs */}
+        <div className="w-full">
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="profile" className="w-full">
+                <User className="h-4 w-6 mr-2" />
+                Profile
+              </TabsTrigger>
+              <TabsTrigger value="addresses" className="w-full">
+                <MapPin className="h-4 w-6 mr-2" />
+                Address
+              </TabsTrigger>
+              <TabsTrigger value="orders" className="w-full">
+                <ShoppingBag className="h-4 w-6 mr-2" />
+                Orders
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Profile Tab */}
-          <TabsContent value="profile" className="mt-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Personal Information</CardTitle>
-                    <CardDescription>
-                      Update your personal details and contact information
-                    </CardDescription>
+            {/* Profile Tab - Full Width */}
+            <TabsContent value="profile" className="mt-6">
+              <Card className="w-full">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Personal Information</CardTitle>
+                      <CardDescription>
+                        Update your personal details and contact information
+                      </CardDescription>
+                    </div>
+                    {!editingProfile ? (
+                      <Button variant="outline" onClick={() => setEditingProfile(true)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setEditingProfile(false)}>
+                          <X className="h-4 w-4 mr-2" />
+                          Cancel
+                        </Button>
+                        <Button onClick={handleProfileUpdate} disabled={loading}>
+                          <Save className="h-4 w-4 mr-2" />
+                          Save Changes
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  {!editingProfile ? (
-                    <Button variant="outline" onClick={() => setEditingProfile(true)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Profile
-                    </Button>
+                </CardHeader>
+                <CardContent>
+                  {editingProfile ? (
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Full Name</Label>
+                        <Input
+                          value={profileForm.name}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label>Email Address</Label>
+                        <Input
+                          type="email"
+                          value={profileForm.email}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label>Phone Number</Label>
+                        <Input
+                          value={profileForm.phone}
+                          onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
+                        />
+                      </div>
+                    </div>
                   ) : (
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setEditingProfile(false)}>
-                        <X className="h-4 w-4 mr-2" />
-                        Cancel
-                      </Button>
-                      <Button onClick={handleProfileUpdate} disabled={loading}>
-                        <Save className="h-4 w-4 mr-2" />
-                        Save Changes
-                      </Button>
+                    <div className="space-y-6">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <User className="h-4 w-4" />
+                            <span>Full Name</span>
+                          </div>
+                          <p className="font-medium">{user.name}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Mail className="h-4 w-4" />
+                            <span>Email Address</span>
+                          </div>
+                          <p className="font-medium">{user.email}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Phone className="h-4 w-4" />
+                            <span>Phone Number</span>
+                          </div>
+                          <p className="font-medium">{user.phone || 'Not provided'}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
+                            <span>Member Since</span>
+                          </div>
+                          <p className="font-medium">
+                            {new Date(user.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                {editingProfile ? (
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Full Name</Label>
-                      <Input
-                        value={profileForm.name}
-                        onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label>Email Address</Label>
-                      <Input
-                        type="email"
-                        value={profileForm.email}
-                        onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label>Phone Number</Label>
-                      <Input
-                        value={profileForm.phone}
-                        onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <User className="h-4 w-4" />
-                          <span>Full Name</span>
-                        </div>
-                        <p className="font-medium">{user.name}</p>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Mail className="h-4 w-4" />
-                          <span>Email Address</span>
-                        </div>
-                        <p className="font-medium">{user.email}</p>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Phone className="h-4 w-4" />
-                          <span>Phone Number</span>
-                        </div>
-                        <p className="font-medium">{user.phone || 'Not provided'}</p>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          <span>Member Since</span>
-                        </div>
-                        <p className="font-medium">
-                          {new Date(user.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          {/* Addresses Tab */}
-          <TabsContent value="addresses" className="mt-6">
-            <div className="grid lg:grid-cols-3 gap-6">
-              {/* Address List */}
-              <div className="lg:col-span-2 space-y-4">
-                <Card>
+            {/* Address Tab - Single Address Only */}
+            <TabsContent value="addresses" className="mt-6">
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* Address Display */}
+                <Card className="w-full">
                   <CardHeader>
-                    <CardTitle>Saved Addresses</CardTitle>
+                    <CardTitle>Delivery Address</CardTitle>
                     <CardDescription>
-                      Manage your delivery addresses
+                      Your single delivery address for all orders
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {user.addresses?.length > 0 ? (
-                      <div className="space-y-4">
-                        {user.addresses.map((address) => (
-                          <div key={address._id} className="border rounded-lg p-4">
+                    {hasAddress ? (
+                      user.addresses.map((address) => (
+                        <div key={address._id} className="space-y-4">
+                          <div className="border rounded-lg p-4">
                             <div className="flex justify-between items-start mb-3">
                               <div className="flex items-center gap-2">
                                 {address.type === 'home' ? (
@@ -413,9 +429,9 @@ const Profile = () => {
                                   <Briefcase className="h-4 w-4 text-primary" />
                                 ) : null}
                                 <span className="font-medium capitalize">{address.type}</span>
-                                {address.isDefault && (
-                                  <Badge className="text-xs">Default</Badge>
-                                )}
+                                <Badge className="text-xs bg-green-100 text-green-800">
+                                  Primary Address
+                                </Badge>
                               </div>
                               <div className="flex gap-2">
                                 <Button
@@ -444,30 +460,41 @@ const Profile = () => {
                             </p>
                             <p className="text-sm text-muted-foreground">{address.country}</p>
                           </div>
-                        ))}
-                      </div>
+                          
+                          {/* Address Info Note */}
+                          <div className="bg-blue-50 p-4 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <Info className="h-4 w-4 text-blue-600 mt-0.5" />
+                              <div className="text-sm text-blue-800">
+                                <p className="font-medium mb-1">Note:</p>
+                                <p>This is your primary delivery address. All orders will be delivered to this address.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))
                     ) : (
                       <div className="text-center py-8">
-                        <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <h3 className="font-semibold mb-2">No Addresses Saved</h3>
+                        <MapPin className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="font-semibold text-lg mb-2">No Address Saved</h3>
                         <p className="text-muted-foreground mb-4">
-                          Add your first delivery address
+                          Add your delivery address to place orders
                         </p>
                       </div>
                     )}
                   </CardContent>
                 </Card>
-              </div>
 
-              {/* Add/Edit Address Form */}
-              <div>
-                <Card>
+                {/* Address Form */}
+                <Card className="w-full">
                   <CardHeader>
                     <CardTitle>
-                      {editingAddress ? 'Edit Address' : 'Add New Address'}
+                      {editingAddress ? 'Update Address' : hasAddress ? 'Edit Address' : 'Add Address'}
                     </CardTitle>
                     <CardDescription>
-                      {editingAddress ? 'Update address details' : 'Add a new delivery address'}
+                      {editingAddress || hasAddress 
+                        ? 'Update your delivery address details' 
+                        : 'Set up your delivery address'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -491,37 +518,41 @@ const Profile = () => {
                       </div>
 
                       <div>
-                        <Label>Street Address</Label>
+                        <Label>Street Address *</Label>
                         <Input
                           value={addressForm.street}
                           onChange={(e) => setAddressForm(prev => ({ ...prev, street: e.target.value }))}
                           placeholder="House no, street, area"
+                          required
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>City</Label>
+                          <Label>City *</Label>
                           <Input
                             value={addressForm.city}
                             onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
+                            required
                           />
                         </div>
                         <div>
-                          <Label>State</Label>
+                          <Label>State *</Label>
                           <Input
                             value={addressForm.state}
                             onChange={(e) => setAddressForm(prev => ({ ...prev, state: e.target.value }))}
+                            required
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>ZIP Code</Label>
+                          <Label>ZIP Code *</Label>
                           <Input
                             value={addressForm.zipCode}
                             onChange={(e) => setAddressForm(prev => ({ ...prev, zipCode: e.target.value }))}
+                            required
                           />
                         </div>
                         <div>
@@ -533,33 +564,27 @@ const Profile = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="default-address"
-                          checked={addressForm.isDefault}
-                          onChange={(e) => setAddressForm(prev => ({ ...prev, isDefault: e.target.checked }))}
-                          className="h-4 w-4 rounded border-gray-300"
-                        />
-                        <Label htmlFor="default-address">Set as default address</Label>
-                      </div>
-
                       <div className="flex gap-2 pt-4">
-                        {editingAddress && (
+                        {(editingAddress || hasAddress) && (
                           <Button
                             variant="outline"
                             className="flex-1"
                             onClick={() => {
                               setEditingAddress(null);
-                              setAddressForm({
-                                type: 'home',
-                                street: '',
-                                city: '',
-                                state: '',
-                                zipCode: '',
-                                country: 'India',
-                                isDefault: false
-                              });
+                              if (hasAddress) {
+                                const userAddress = user.addresses[0];
+                                setAddressForm(userAddress);
+                              } else {
+                                setAddressForm({
+                                  type: 'home',
+                                  street: '',
+                                  city: '',
+                                  state: '',
+                                  zipCode: '',
+                                  country: 'India',
+                                  isDefault: true
+                                });
+                              }
                             }}
                           >
                             Cancel
@@ -568,124 +593,134 @@ const Profile = () => {
                         <Button
                           className="flex-1"
                           onClick={() => 
-                            editingAddress 
-                              ? handleUpdateAddress(editingAddress)
+                            editingAddress || hasAddress
+                              ? handleUpdateAddress(editingAddress || user.addresses[0]._id)
                               : handleAddAddress()
                           }
-                          disabled={loading}
+                          disabled={loading || (!addressForm.street || !addressForm.city || !addressForm.state || !addressForm.zipCode)}
                         >
-                          {editingAddress ? 'Update Address' : 'Add Address'}
+                          {editingAddress || hasAddress ? 'Update Address' : 'Save Address'}
                         </Button>
+                      </div>
+                      
+                      {/* Address Limit Note */}
+                      <div className="bg-yellow-50 p-3 rounded-lg mt-4">
+                        <div className="flex items-start gap-2">
+                          <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5" />
+                          <div className="text-sm text-yellow-800">
+                            <p className="font-medium mb-1">One Address Limit</p>
+                            <p>You can only have one delivery address. Update your existing address if needed.</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
-            </div>
-          </TabsContent>
+            </TabsContent>
 
-          {/* Orders Tab */}
-          <TabsContent value="orders" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Order History</CardTitle>
-                <CardDescription>
-                  Track and manage your dairy orders
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {orders.length > 0 ? (
-                  <div className="space-y-4">
-                    {orders.map((order) => (
-                      <div key={order._id} className="border rounded-lg p-4">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge className={getOrderStatusColor(order.orderStatus)}>
-                                <span className="flex items-center gap-1">
-                                  {getStatusIcon(order.orderStatus)}
-                                  {order.orderStatus.split('-').map(word => 
-                                    word.charAt(0).toUpperCase() + word.slice(1)
-                                  ).join(' ')}
+            {/* Orders Tab - Full Width */}
+            <TabsContent value="orders" className="mt-6">
+              <Card className="w-full">
+                <CardHeader>
+                  <CardTitle>Order History</CardTitle>
+                  <CardDescription>
+                    Track and manage your dairy orders
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {orders.length > 0 ? (
+                    <div className="space-y-4">
+                      {orders.map((order) => (
+                        <div key={order._id} className="border rounded-lg p-4">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge className={getOrderStatusColor(order.orderStatus)}>
+                                  <span className="flex items-center gap-1">
+                                    {getStatusIcon(order.orderStatus)}
+                                    {order.orderStatus.split('-').map(word => 
+                                      word.charAt(0).toUpperCase() + word.slice(1)
+                                    ).join(' ')}
+                                  </span>
+                                </Badge>
+                                <span className="text-sm text-muted-foreground">
+                                  Order #{order.orderNumber}
                                 </span>
-                              </Badge>
-                              <span className="text-sm text-muted-foreground">
-                                Order #{order.orderNumber}
-                              </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                Placed on {new Date(order.createdAt).toLocaleDateString()}
+                              </p>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              Placed on {new Date(order.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="mt-2 md:mt-0">
-                            <p className="text-lg font-bold">₹{order.totalAmount.toFixed(2)}</p>
-                          </div>
-                        </div>
-
-                        <Separator className="my-4" />
-
-                        <div className="space-y-3">
-                          {order.items.map((item) => (
-                            <div key={item.product?._id || item._id} className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded overflow-hidden bg-muted flex-shrink-0">
-                                {item.product?.images?.[0]?.url ? (
-                                  <img
-                                    src={item.product.images[0].url}
-                                    alt={item.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                    <span className="text-sm">🥛</span>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <p className="font-medium text-sm">{item.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  ₹{item.price} × {item.quantity}
-                                </p>
-                              </div>
-                              <div className="text-sm font-medium">
-                                ₹{(item.price * item.quantity).toFixed(2)}
-                              </div>
+                            <div className="mt-2 md:mt-0">
+                              <p className="text-lg font-bold">₹{order.totalAmount.toFixed(2)}</p>
                             </div>
-                          ))}
-                        </div>
+                          </div>
 
-                        <div className="flex justify-end mt-4">
-                          <Button variant="outline" size="sm" asChild>
-                            <a href={`/order/${order._id}`}>
-                              View Details
-                            </a>
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="font-semibold mb-2">No Orders Yet</h3>
-                    <p className="text-muted-foreground mb-6">
-                      You haven't placed any orders yet
-                    </p>
-                    <Button asChild>
-                      <a href="/products">Start Shopping</a>
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                          <Separator className="my-4" />
 
-          {/* Wishlist Tab */}
-          
-        </Tabs>
+                          <div className="space-y-3">
+                            {order.items.map((item) => (
+                              <div key={item.product?._id || item._id} className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded overflow-hidden bg-muted flex-shrink-0">
+                                  {item.product?.images?.[0]?.url ? (
+                                    <img
+                                      src={`http://localhost:5000${item.product.images[0].url}`}
+                                      alt={item.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <span className="text-sm">🥛</span>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-medium text-sm">{item.name}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    ₹{item.price} × {item.quantity}
+                                  </p>
+                                </div>
+                                <div className="text-sm font-medium">
+                                  ₹{(item.price * item.quantity).toFixed(2)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="flex justify-end mt-4">
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={`/order/${order._id}`}>
+                                View Details
+                              </a>
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="font-semibold text-lg mb-2">No Orders Yet</h3>
+                      <p className="text-muted-foreground mb-6">
+                        You haven't placed any orders yet
+                      </p>
+                      <Button asChild>
+                        <a href="/products">Start Shopping</a>
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
 };
 
+// Add these missing icon imports at the top
+import { Info, AlertCircle } from 'lucide-react';
 
 export default Profile;

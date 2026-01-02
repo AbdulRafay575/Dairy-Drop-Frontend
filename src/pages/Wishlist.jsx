@@ -60,14 +60,17 @@ const Wishlist = () => {
     }
   };
 
+  // Updated: Now removes from wishlist after adding to cart
   const handleAddToCart = (product) => {
     addToCart(product);
+    removeFromWishlist(product._id); // Add this line
     toast({
       title: 'Added to Cart',
-      description: `${product.name} has been added to your cart`,
+      description: `${product.name} has been added to your cart and removed from wishlist`,
     });
   };
 
+  // moveToCart already removes from wishlist in CartContext
   const handleMoveToCart = (productId) => {
     moveToCart(productId);
     toast({
