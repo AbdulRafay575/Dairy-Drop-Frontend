@@ -9,7 +9,7 @@ export const validateEmail = (email) => {
 };
 
 /**
- * Validate phone number (Indian format)
+ * Validate phone number (Pakistan format)
  * @param {string} phone - Phone number to validate
  * @returns {boolean} True if valid
  */

@@ -102,9 +102,9 @@ export const formatPhoneNumber = (phone) => {
   // Remove all non-digit characters
   const cleaned = phone.replace(/\D/g, '');
   
-  // Format Indian phone numbers
+  // Format Pakistan phone numbers
   if (cleaned.length === 10) {
-    return `+91 ${cleaned.substring(0, 5)} ${cleaned.substring(5)}`;
+    return `+92 ${cleaned.substring(0, 5)} ${cleaned.substring(5)}`;
   } else if (cleaned.length > 10) {
     return `+${cleaned.substring(0, cleaned.length - 10)} ${cleaned.substring(cleaned.length - 10, cleaned.length - 5)} ${cleaned.substring(cleaned.length - 5)}`;
   }

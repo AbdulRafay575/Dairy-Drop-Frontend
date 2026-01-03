@@ -50,7 +50,7 @@ const Profile = () => {
     city: '',
     state: '',
     zipCode: '',
-    country: 'India',
+    country: 'Pakistan',
     isDefault: true
   });
   const [editingAddress, setEditingAddress] = useState(null);
@@ -133,7 +133,7 @@ const Profile = () => {
           city: '',
           state: '',
           zipCode: '',
-          country: 'India',
+          country: 'Pakistan',
           isDefault: true
         });
       } else {
@@ -171,7 +171,7 @@ const Profile = () => {
           city: '',
           state: '',
           zipCode: '',
-          country: 'India',
+          country: 'Pakistan',
           isDefault: true
         });
       } else {
@@ -581,7 +581,7 @@ const Profile = () => {
                                   city: '',
                                   state: '',
                                   zipCode: '',
-                                  country: 'India',
+                                  country: 'Pakistan',
                                   isDefault: true
                                 });
                               }

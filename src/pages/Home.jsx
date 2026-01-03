@@ -130,22 +130,22 @@ const Home = () => {
 
   const testimonials = [
     {
-      name: 'Priya Sharma',
+      name: 'Saira Sana',
       role: 'Home Chef',
       content: 'The creamiest milk I have ever tasted! Dairy Drop has transformed our family breakfasts.',
       rating: 5,
       avatar: '👩‍🍳'
     },
     {
-      name: 'Rajesh Kumar',
+      name: 'Zamar',
       role: 'Restaurant Owner',
       content: 'Consistent quality and timely delivery. Our go-to for all dairy needs.',
       rating: 5,
       avatar: '👨‍🍳'
     },
     {
-      name: 'Anjali Patel',
-      role: 'Mother of Two',
+      name: 'Uzair',
+      role: 'Father of Two',
       content: 'My children love the organic yogurt. Trustworthy and delicious every time.',
       rating: 5,
       avatar: '👩‍👧‍👦'
@@ -303,7 +303,7 @@ const Home = () => {
           >
             <motion.div variants={fadeInUp} className="inline-flex mb-4">
               <span className="text-sm font-semibold text-blue-600 tracking-wide uppercase">
-                WHY CHOOSE DAIRY DROP
+                WHY CHOOSE Dairy Drop
               </span>
             </motion.div>
             <motion.h2 variants={fadeInUp} className="text-5xl md:text-6xl font-bold mb-6">

@@ -97,7 +97,7 @@ const Checkout = () => {
           city: selectedAddress.city,
           state: selectedAddress.state,
           zipCode: selectedAddress.zipCode,
-          country: selectedAddress.country || 'India'
+          country: selectedAddress.country || 'Pakistan'
         },
         contactNumber: user?.phone || '',
         deliveryDate: new Date(deliveryDate).toISOString(),
@@ -340,7 +340,7 @@ const Checkout = () => {
                     <div className="w-12 h-12 rounded overflow-hidden bg-muted flex-shrink-0">
                       {item.product.images?.[0]?.url ? (
                         <img
-                src={`https://dairydrop.onrender.com${product.images[0].url}`}
+                src={`https://dairydrop.onrender.com${item.product.images[0].url}`}
                           alt={item.product.name}
                           className="w-full h-full object-cover"
                         />

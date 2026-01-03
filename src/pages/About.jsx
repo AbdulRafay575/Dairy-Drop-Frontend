@@ -132,7 +132,7 @@ const About = () => {
 
   const team = [
     {
-      name: 'Rajesh Kumar',
+      name: 'Zamar',
       role: 'Founder & Vision Keeper',
       bio: 'Third-generation dairy farmer. Believes in the soul of fresh milk.',
       image: '👨‍🌾',
@@ -140,7 +140,7 @@ const About = () => {
       borderColor: 'border-blue-200'
     },
     {
-      name: 'Priya Sharma',
+      name: 'Janisar',
       role: 'Quality Guardian',
       bio: 'Food scientist with 15 years in dairy. Our taste and safety compass.',
       image: '👩‍🔬',
@@ -148,7 +148,7 @@ const About = () => {
       borderColor: 'border-amber-200'
     },
     {
-      name: 'Amit Patel',
+      name: 'Arslan',
       role: 'Operations Heartbeat',
       bio: 'Ensures every delivery feels like the first. Logistics poet.',
       image: '👨‍💼',
@@ -156,7 +156,7 @@ const About = () => {
       borderColor: 'border-green-200'
     },
     {
-      name: 'Anjali Reddy',
+      name: 'Uzair',
       role: 'Community Voice',
       bio: 'Listens, connects, and makes sure every family feels heard.',
       image: '👩‍💻',
