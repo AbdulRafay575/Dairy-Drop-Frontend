@@ -272,7 +272,7 @@ const WishlistItem = ({ product, onMoveToCart, onAddToCart, onRemove }) => {
         <div className="relative h-56 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
           {product.images?.[0]?.url ? (
             <img
-              src={product.images[0].url}
+src={`https://dairydrop.onrender.com${product.images[0].url}`}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             />

@@ -522,7 +522,7 @@ const Contact = () => {
         {/* Background Image with Overlay */}
         <div className="absolute inset-0">
           <img 
-            src="src\assets\images\contact.jpg"
+            src="https://images.pexels.com/photos/325944/pexels-photo-325944.jpeg"
             alt="Dairy Farm"
             className="w-full h-full object-cover"
           />

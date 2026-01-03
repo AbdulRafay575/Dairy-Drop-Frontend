@@ -252,7 +252,7 @@ const ProductManagement = () => {
                       <div className="w-10 h-10 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                         {product.images?.[0]?.url ? (
                           <img
-                            src={`http://localhost:5000${product.images[0].url}`}
+src={`https://dairydrop.onrender.com${product.images[0].url}`}
                             alt={product.name}
                             className="w-full h-full object-cover"
                           />

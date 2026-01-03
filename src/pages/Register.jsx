@@ -124,7 +124,7 @@ const Register = () => {
       {/* Background with cinematic overlay */}
       <div className="absolute inset-0">
         <img
-          src="/src/assets/images/Register-Background.jpg"
+          src="https://images.pexels.com/photos/259637/pexels-photo-259637.jpeg"
           alt="Dairy farm background"
           className="w-full h-full object-cover"
         />

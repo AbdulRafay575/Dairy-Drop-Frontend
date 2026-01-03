@@ -673,7 +673,7 @@ const Home = () => {
         {/* Background Image with Overlay */}
         <div className="absolute inset-0">
           <img 
-            src="src\assets\images\Home Experience.jpg"
+            src="https://images.pexels.com/photos/4919739/pexels-photo-4919739.jpeg"
             alt="Fresh Dairy Background"
             className="w-full h-full object-cover"
           />

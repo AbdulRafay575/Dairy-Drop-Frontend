@@ -665,7 +665,7 @@ const Profile = () => {
                                 <div className="w-12 h-12 rounded overflow-hidden bg-muted flex-shrink-0">
                                   {item.product?.images?.[0]?.url ? (
                                     <img
-                                      src={`http://localhost:5000${item.product.images[0].url}`}
+src={`https://dairydrop.onrender.com${product.images[0].url}`}
                                       alt={item.name}
                                       className="w-full h-full object-cover"
                                     />

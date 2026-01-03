@@ -382,7 +382,7 @@ const ReviewManagement = () => {
                   <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
                     {selectedReview.product?.images?.[0]?.url ? (
                       <img
-                        src={selectedReview.product.images[0].url}
+                      src={`https://dairydrop.onrender.com${selectedReview.product.images[0].url}`}
                         alt={selectedReview.product.name}
                         className="w-full h-full object-cover"
                       />

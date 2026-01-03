@@ -230,7 +230,8 @@ const Dashboard = () => {
                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                           {product.images?.[0]?.url ? (
                             <img
-                              src={product.images[0].url}
+                            
+src={`https://dairydrop.onrender.com${product.images[0].url}`}
                               alt={product.name}
                               className="w-full h-full object-cover"
                             />

@@ -379,7 +379,7 @@ const ProductDetailPage = () => {
               >
                 {product.images?.[activeImage]?.url ? (
                   <img
-                src={`http://localhost:5000${product.images[0].url}`}
+src={`https://dairydrop.onrender.com${product.images[0].url}`}
                     alt={product.images[activeImage].alt || product.name}
                     className="w-full h-[500px] object-cover hover:scale-105 transition-transform duration-700"
                   />
@@ -1089,7 +1089,7 @@ const ProductDetailPage = () => {
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
-              src={product.images[activeImage].url}
+              src={`https://dairydrop.onrender.com${product.images[activeImage].url}`}
               alt={product.images[activeImage].alt || product.name}
               className="max-w-full max-h-[90vh] object-contain"
               onClick={(e) => e.stopPropagation()}

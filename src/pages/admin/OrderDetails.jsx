@@ -267,7 +267,7 @@ const OrderDetails = ({ order }) => {
                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                           {item.product?.images?.[0]?.url ? (
                             <img
-                              src={item.product.images[0].url}
+                            src={`https://dairydrop.onrender.com${item.product.images[0].url}`}
                               alt={item.name}
                               className="w-full h-full object-cover"
                             />
