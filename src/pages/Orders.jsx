@@ -525,7 +525,7 @@ const OrderDetailsModal = ({ order, onClose, getStatusColor, getStatusIcon, getO
                   <div className="w-16 h-16 rounded overflow-hidden bg-muted flex-shrink-0">
                     {item.product?.images?.[0]?.url ? (
                       <img
-src={`https://dairydrop.onrender.com${product.images[0].url}`}
+                      src={`https://dairydrop.onrender.com${item.product.images[0].url}`}
                         alt={item.name}
                         className="w-full h-full object-cover"
                       />
