@@ -215,7 +215,7 @@ const Cart = () => {
                       <div className="relative w-32 h-32 rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 flex-shrink-0 group">
                         {item.product.images?.[0]?.url ? (
                           <img
-                src={`https://dairydrop.onrender.com${product.images[0].url}`}
+                src={`https://dairydrop.onrender.com${item.product.images[0].url}`}
                             alt={item.product.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
