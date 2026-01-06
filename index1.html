@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DairyDrop Chatbot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+    }
+
+    .chatbot {
+      width: 360px;
+      max-height: 540px;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: #2563eb;
+      color: white;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .chat-body {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      background: #f9fafb;
+    }
+
+    .message {
+      max-width: 80%;
+      margin-bottom: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .user {
+      background: #2563eb;
+      color: white;
+      margin-left: auto;
+    }
+
+    .bot {
+      background: #e5e7eb;
+      color: #111827;
+      margin-right: auto;
+    }
+
+    .chat-footer {
+      display: flex;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .chat-footer input {
+      flex: 1;
+      border: none;
+      padding: 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .chat-footer button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 0 16px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .chat-footer button:hover {
+      background: #1e40af;
+    }
+  </style>
+</head>
+<body>
+
+<div class="chatbot">
+  <div class="chat-header">💬 DairyDrop Assistant</div>
+
+  <div class="chat-body" id="chatBody">
+    <div class="message bot">
+      Hello 👋 I’m DairyDrop’s assistant. How can I help you today?
+    </div>
+  </div>
+
+  <div class="chat-footer">
+    <input type="text" id="userInput" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script>
+  const chatBody = document.getElementById('chatBody');
+  const userInput = document.getElementById('userInput');
+
+  function addMessage(text, sender) {
+    const msg = document.createElement('div');
+    msg.className = `message ${sender}`;
+    msg.innerText = text;
+    chatBody.appendChild(msg);
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const message = userInput.value.trim();
+    if (!message) return;
+
+    addMessage(message, 'user');
+    userInput.value = '';
+
+    try {
+      const response = await fetch('/api/chatbot/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        addMessage(data.reply, 'bot');
+      } else {
+        addMessage('Something went wrong 😕', 'bot');
+      }
+
+    } catch (err) {
+      addMessage('Server not responding ⚠️', 'bot');
+    }
+  }
+
+  userInput.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  });
+</script>
+
+</body>
+</html>
